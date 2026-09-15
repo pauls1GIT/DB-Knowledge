@@ -1,0 +1,1802 @@
+[
+  {
+    "external_key": "INC-0001",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0002",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0003",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0004",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0005",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0006",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0007",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0008",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0009",
+    "summary": "Expired TLS certificate with intermittent network symptoms",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "ambiguous"
+  },
+  {
+    "external_key": "INC-0010",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0011",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0012",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0013",
+    "summary": "Production alert indicates dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0014",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0015",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0016",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0017",
+    "summary": "Production alert indicates dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0018",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0019",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0020",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0021",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0022",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0023",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0024",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0025",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0026",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0027",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0028",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0029",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0030",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0031",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0032",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0033",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0034",
+    "summary": "Filesystem full with intermittent network symptoms",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "ambiguous"
+  },
+  {
+    "external_key": "INC-0035",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0036",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0037",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0038",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0039",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0040",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0041",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0042",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0043",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0044",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0045",
+    "summary": "Oracle connection timeout with intermittent network symptoms",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "ambiguous"
+  },
+  {
+    "external_key": "INC-0046",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0047",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0048",
+    "summary": "Expired TLS certificate",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0049",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0050",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0051",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0052",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0053",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0054",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0055",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0056",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0057",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0058",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0059",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0060",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0061",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0062",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0063",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0064",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0065",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0066",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0067",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0068",
+    "summary": "Oracle connection timeout",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0069",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0070",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0071",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0072",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0073",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0074",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0075",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0076",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0077",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0078",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0079",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0080",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0081",
+    "summary": "Filesystem full",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0082",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0083",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0084",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0085",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0086",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0087",
+    "summary": "Expired TLS certificate",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0088",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0089",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0090",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0091",
+    "summary": "Oracle connection timeout",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0092",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0093",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0094",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0095",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0096",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0097",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0098",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0099",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0100",
+    "summary": "Oracle connection timeout",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0101",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0102",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0103",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0104",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0105",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0106",
+    "summary": "Expired TLS certificate",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0107",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0108",
+    "summary": "Production alert indicates dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0109",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0110",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0111",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0112",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0113",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0114",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0115",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0116",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0117",
+    "summary": "Filesystem full",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0118",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0119",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0120",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0121",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0122",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0123",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0124",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0125",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0126",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0127",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0128",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0129",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0130",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0131",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0132",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0133",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0134",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0135",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0136",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0137",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0138",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0139",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0140",
+    "summary": "Users report dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0141",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0142",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0143",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0144",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0145",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0146",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0147",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0148",
+    "summary": "Filesystem full with intermittent network symptoms",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "ambiguous"
+  },
+  {
+    "external_key": "INC-0149",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0150",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0151",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0152",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0153",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0154",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0155",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0156",
+    "summary": "Service impact caused by expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0157",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0158",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0159",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0160",
+    "summary": "DNS resolution failure",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0161",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0162",
+    "summary": "Production alert indicates dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0163",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0164",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0165",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0166",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0167",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0168",
+    "summary": "Oracle connection timeout",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0169",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0170",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0171",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0172",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0173",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0174",
+    "summary": "Service impact caused by filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0175",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0176",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0177",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0178",
+    "summary": "Resolved incident: expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0179",
+    "summary": "Users report expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0180",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0181",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0182",
+    "summary": "Expired TLS certificate with intermittent network symptoms",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "ambiguous"
+  },
+  {
+    "external_key": "INC-0183",
+    "summary": "Oracle connection timeout",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "near_duplicate"
+  },
+  {
+    "external_key": "INC-0184",
+    "summary": "Resolved incident: dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0185",
+    "summary": "Resolved incident: oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0186",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0187",
+    "summary": "Users report oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0188",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0189",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0190",
+    "summary": "Service impact caused by oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0191",
+    "summary": "Production alert indicates oracle connection timeout.",
+    "description": "Application cannot connect to Oracle; requests time out.",
+    "resolution": "Validate routing/listener, restore connectivity, then retry.",
+    "error_code": "ORA-12170",
+    "ground_truth_error_group": "oracle_timeout",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0192",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0193",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0194",
+    "summary": "Production alert indicates dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0195",
+    "summary": "Users report filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0196",
+    "summary": "Resolved incident: filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "semantic_duplicate"
+  },
+  {
+    "external_key": "INC-0197",
+    "summary": "Service impact caused by dns resolution failure.",
+    "description": "Application cannot resolve backend hostname.",
+    "resolution": "Correct DNS/resolver configuration and verify name resolution.",
+    "error_code": "DNS",
+    "ground_truth_error_group": "dns_failure",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0198",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0199",
+    "summary": "Production alert indicates expired tls certificate.",
+    "description": "Client rejects service TLS certificate.",
+    "resolution": "Renew the certificate and restart/reload the dependent service.",
+    "error_code": "TLS-CERT",
+    "ground_truth_error_group": "tls_expired",
+    "kind": "unique"
+  },
+  {
+    "external_key": "INC-0200",
+    "summary": "Production alert indicates filesystem full.",
+    "description": "Service cannot write files because disk is full.",
+    "resolution": "Remove/archive safe data or extend storage, then restart failed workload.",
+    "error_code": "ENOSPC",
+    "ground_truth_error_group": "disk_full",
+    "kind": "unique"
+  }
+]
