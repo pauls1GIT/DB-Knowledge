@@ -137,7 +137,11 @@ with search_tab:
     q=st.text_input("Search approved KEDB","Oracle connection timeout")
     ec=st.text_input("Exact identifier/error code","")
     if st.button("Search"):
-        st.dataframe(post("/api/retrieval/search",{"query":q,"error_code":ec or None}),use_container_width=True)
+        # Un if pentru a verifica dacă cele 2 câmpuri sunt goale.
+        if q.strip() or ec.strip():
+            st.dataframe(post("/api/retrieval/search",{"query":q,"error_code":ec or None}),use_container_width=True)
+        else:
+            st.info("Enter a search term or exact identifier/error code.")
 
 with resolve_tab:
     s=st.text_input("Ticket summary","Oracle application connection times out",key="resolve_summary")
