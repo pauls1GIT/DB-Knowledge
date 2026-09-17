@@ -22,6 +22,6 @@ class PublishApprovedKnowledge:
         chunks=[ArticleChunk(article_version_id=v.id,chunk_index=0,section="problem",content=v.problem),ArticleChunk(article_version_id=v.id,chunk_index=1,section="root_cause",content=v.root_cause),ArticleChunk(article_version_id=v.id,chunk_index=2,section="solution",content=v.solution)]
         self.repo.save_chunks(chunks)
         vectors=self.embeddings.embed_batch([c.content for c in chunks])
-        md=[{"known_error_id":str(ke.id),"article_version_id":str(v.id),"title":v.title,"section":c.section} for c in chunks]
+        md=[{"known_error_id":str(ke.id),"article_version_id":str(v.id),"title":v.title,"resolution":v.solution,"section":c.section} for c in chunks]
         self.vector_store.upsert(chunks,vectors,md)
         return {"known_error_id":str(ke.id),"article_version_id":str(v.id),"version_number":v.version_number}

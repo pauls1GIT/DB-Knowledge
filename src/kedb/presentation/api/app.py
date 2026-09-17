@@ -111,7 +111,7 @@ def review(workflow_id: UUID, body: ReviewIn):
 @app.post("/api/retrieval/search")
 def search(body: SearchIn):
     issue=JiraIssue(external_key="SEARCH",summary=body.query,description=body.query,resolution="",error_code=body.error_code)
-    return [{"known_error_id":str(x.known_error_id),"article_version_id":str(x.article_version_id),"title":x.title,"exact_score":x.exact_score,"lexical_score":x.lexical_score,"vector_score":x.vector_score,"final_score":x.final_score,"rank":x.rank} for x in retrieval.search(issue,body.query)]
+    return [{"known_error_id":str(x.known_error_id),"article_version_id":str(x.article_version_id),"title":x.title, "resolution":x.resolution, "exact_score":x.exact_score,"lexical_score":x.lexical_score,"vector_score":x.vector_score,"final_score":x.final_score,"rank":x.rank} for x in retrieval.search(issue,body.query)]
 
 @app.post("/api/tickets/resolve")
 def resolve(body: IssueIn):

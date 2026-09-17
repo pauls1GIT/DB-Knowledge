@@ -13,7 +13,9 @@ class HybridRetrievalCoordinator:
         for bucket in buckets:
             for c in bucket:
                 key=(c.known_error_id,c.article_version_id)
-                target=merged.setdefault(key, RetrievalCandidate(known_error_id=c.known_error_id, article_version_id=c.article_version_id, title=c.title))
+                target=merged.setdefault(key, RetrievalCandidate(known_error_id=c.known_error_id, article_version_id=c.article_version_id, title=c.title, resolution=c.resolution))
+                if c.resolution:
+                    target.resolution = c.resolution
                 target.exact_score=max(target.exact_score,c.exact_score)
                 target.lexical_score=max(target.lexical_score,c.lexical_score)
                 target.vector_score=max(target.vector_score,c.vector_score)

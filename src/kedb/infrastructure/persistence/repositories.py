@@ -163,11 +163,11 @@ class PostgresExactSearcher:
         if not issue.error_code: return []
         with self.session_factory() as s:
             rows=s.execute(text("""
-                SELECT ke.id kid, av.id vid, av.title
+                SELECT ke.id kid, av.id vid, av.title, av.solution
                 FROM article_version av JOIN known_error ke ON ke.current_version_id=av.id
                 WHERE av.status='PUBLISHED' AND (av.problem ILIKE :q OR av.root_cause ILIKE :q OR av.solution ILIKE :q OR av.title ILIKE :q)
                 LIMIT :lim"""), {"q":f"%{issue.error_code}%", "lim":limit}).all()
-            return [RetrievalCandidate(known_error_id=r.kid, article_version_id=r.vid, title=r.title, exact_score=1.0) for r in rows]
+            return [RetrievalCandidate(known_error_id=r.kid, article_version_id=r.vid, title=r.title, resolution=r.solution or "", exact_score=1.0) for r in rows]
 
 
 class PostgresLexicalSearcher:
@@ -175,9 +175,9 @@ class PostgresLexicalSearcher:
     def search(self, query: str, limit=10):
         with self.session_factory() as s:
             rows=s.execute(text("""
-                SELECT ke.id kid, av.id vid, av.title,
+                SELECT ke.id kid, av.id vid, av.title, av.solution,
                        ts_rank_cd(av.search_vector, websearch_to_tsquery('english', :q)) score
                 FROM article_version av JOIN known_error ke ON ke.current_version_id=av.id
                 WHERE av.status='PUBLISHED' AND av.search_vector @@ websearch_to_tsquery('english', :q)
                 ORDER BY score DESC LIMIT :lim"""), {"q":query, "lim":limit}).all()
-            return [RetrievalCandidate(known_error_id=r.kid, article_version_id=r.vid, title=r.title, lexical_score=float(r.score)) for r in rows]
+            return [RetrievalCandidate(known_error_id=r.kid, article_version_id=r.vid, title=r.title, resolution=r.solution or "", lexical_score=float(r.score)) for r in rows]

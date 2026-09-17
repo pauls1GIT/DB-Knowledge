@@ -86,6 +86,7 @@ class RetrievalCandidate:
     known_error_id: UUID
     article_version_id: UUID
     title: str
+    resolution: str = ""
     exact_score: float = 0.0
     lexical_score: float = 0.0
     vector_score: float = 0.0

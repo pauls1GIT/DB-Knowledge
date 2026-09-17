@@ -13,8 +13,8 @@ class ChromaVectorStore:
         self.collection.upsert(ids=[str(c.id) for c in chunks], embeddings=vectors, documents=[c.content for c in chunks], metadatas=metadata)
     def search(self, vector, limit=10):
         if self.collection.count()==0: return []
-        out=self.collection.query(query_embeddings=[vector], n_results=min(limit,self.collection.count()), include=["metadatas","distances"])
+        out=self.collection.query(query_embeddings=[vector], n_results=min(limit,self.collection.count()), include=["metadatas","documents","distances"])
         results=[]
-        for md,dist in zip(out["metadatas"][0], out["distances"][0]):
-            results.append(RetrievalCandidate(known_error_id=UUID(md["known_error_id"]), article_version_id=UUID(md["article_version_id"]), title=md["title"], vector_score=max(0.0,1.0-float(dist))))
+        for md,doc,dist in zip(out["metadatas"][0], out["documents"][0], out["distances"][0]):
+            results.append(RetrievalCandidate(known_error_id=UUID(md["known_error_id"]), article_version_id=UUID(md["article_version_id"]), title=md["title"], resolution=doc if md.get("section") == "solution" else "", vector_score=max(0.0,1.0-float(dist))))
         return results
