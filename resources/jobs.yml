@@ -1,0 +1,15 @@
+resources:
+  jobs:
+    kedb_publish_materialization:
+      name: kedb-publish-materialization-${bundle.target}
+      tasks:
+        - task_key: materialize
+          spark_python_task:
+            python_file: ../jobs/publish_materialization.py
+      max_concurrent_runs: 1
+    kedb_retrieval_evaluation:
+      name: kedb-retrieval-evaluation-${bundle.target}
+      tasks:
+        - task_key: evaluate
+          spark_python_task:
+            python_file: ../jobs/run_evaluation.py

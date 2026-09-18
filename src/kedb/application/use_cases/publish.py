@@ -1,27 +1,68 @@
-from __future__ import annotations
-from dataclasses import replace
-from uuid import UUID
+import hashlib
+import json
+import unicodedata
+from uuid import UUID, uuid4
+from kedb.domain import KnownError, HumanReview, ReviewDecision, create_new_version, ArticleChunk
 from kedb.application.dto import KnowledgeProposal
-from kedb.domain.entities import ArticleChunk, ArticleStatus, ArticleVersion, HumanReview, KnownError
-from kedb.domain.rules import validate_review_for_publication, ensure_can_embed
-
 
 class PublishApprovedKnowledge:
-    def __init__(self, repo, embeddings, vector_store): self.repo=repo; self.embeddings=embeddings; self.vector_store=vector_store
-    def execute(self, issue_id: UUID, proposal: KnowledgeProposal, review: HumanReview, confidence: float=1.0):
-        validate_review_for_publication(review.decision)
-        if proposal.action=="CREATE":
-            ke=self.repo.create_known_error(KnownError(title=proposal.title))
+    def __init__(self, repos):
+        self.repos = repos
+
+    def execute(self, *, proposal: KnowledgeProposal, review: HumanReview, jira_issue_id: UUID | None = None):
+        if review.decision != ReviewDecision.APPROVE:
+            raise ValueError('Cannot publish without human approval')
+
+        content = {
+            'title': proposal.title, 'problem': proposal.problem,
+            'root_cause': proposal.root_cause, 'solution': proposal.solution,
+            'source_jira_issue_id': jira_issue_id,
+        }
+        fingerprint = content_fingerprint(proposal.problem, proposal.root_cause, proposal.solution)
+        previous = self.repos.find_publication(
+            workflow_id=review.workflow_id, jira_issue_id=jira_issue_id, fingerprint=fingerprint)
+        if previous:
+            self.repos.bind_publication_identity(review.workflow_id, jira_issue_id, previous.id)
+            return previous
+        version_id = uuid4()
+        keys = [f"workflow:{review.workflow_id}", f"content:{fingerprint}"]
+        if jira_issue_id:
+            keys.append(f"ticket:{jira_issue_id}")
+        previous = self.repos.reserve_publication(keys, version_id)
+        if previous:
+            self.repos.bind_publication_identity(review.workflow_id, jira_issue_id, previous.id)
+            return previous
+
+        if proposal.action == 'CREATE':
+            ke = KnownError(title=content['title'])
+            self.repos.add_known_error(ke)
+            existing=[]
         else:
-            if proposal.target_known_error_id is None: raise ValueError("UPDATE requires target_known_error_id")
-            ke=self.repo.get_known_error(proposal.target_known_error_id)
-            if ke is None: raise ValueError("Known error not found")
-        v=ArticleVersion(known_error_id=ke.id, version_number=self.repo.next_version_number(ke.id), title=proposal.title, problem=proposal.problem, root_cause=proposal.root_cause, solution=proposal.solution, source_jira_issue_id=issue_id, review_id=review.id, status=ArticleStatus.PUBLISHED)
-        ensure_can_embed(v)
-        self.repo.save_review(review); self.repo.save_version(v); self.repo.set_current_version(ke.id,v.id); self.repo.link_issue(issue_id,ke.id,confidence)
-        chunks=[ArticleChunk(article_version_id=v.id,chunk_index=0,section="problem",content=v.problem),ArticleChunk(article_version_id=v.id,chunk_index=1,section="root_cause",content=v.root_cause),ArticleChunk(article_version_id=v.id,chunk_index=2,section="solution",content=v.solution)]
-        self.repo.save_chunks(chunks)
-        vectors=self.embeddings.embed_batch([c.content for c in chunks])
-        md=[{"known_error_id":str(ke.id),"article_version_id":str(v.id),"title":v.title,"section":c.section} for c in chunks]
-        self.vector_store.upsert(chunks,vectors,md)
-        return {"known_error_id":str(ke.id),"article_version_id":str(v.id),"version_number":v.version_number}
+            if proposal.target_known_error_id is None:
+                raise ValueError('UPDATE requires target_known_error_id')
+            self.repos.lock_known_error(proposal.target_known_error_id)
+            ke = self.repos.get_known_error(proposal.target_known_error_id)
+            if ke is None: raise LookupError('KnownError not found')
+            existing=self.repos.list_versions(ke.id)
+
+        draft=create_new_version(existing, ke.id, id=version_id, **content)
+        published=draft.publish(review)
+        # Persist parent/review rows before the ArticleVersion foreign keys are flushed.
+        self.repos.add_review(review)
+        self.repos.add_version(published)
+        self.repos.set_current(ke.id, published.id)
+        self.repos.add_outbox(published)
+        return published
+
+
+def semantic_chunks(article):
+    if not article.can_embed:
+        raise ValueError('Only approved/published articles may be chunked for production search')
+    data=[('problem', f'{article.title}\n{article.problem}'),('root_cause',article.root_cause),('solution',article.solution)]
+    return [ArticleChunk(known_error_id=article.known_error_id, article_version_id=article.id, chunk_index=i, section=s, content=c) for i,(s,c) in enumerate(data)]
+
+
+def content_fingerprint(problem, root_cause, solution):
+    normalized = [" ".join(unicodedata.normalize("NFKC", text).casefold().split())
+                  for text in (problem, root_cause, solution)]
+    return hashlib.sha256(json.dumps(normalized, ensure_ascii=False).encode()).hexdigest()

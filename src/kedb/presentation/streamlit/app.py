@@ -1,146 +1,217 @@
+from __future__ import annotations
+
+import os
+
+import pandas as pd
+import requests
 import streamlit as st
-import httpx
-from kedb.config import settings
 
-API=settings.api_base_url
-st.set_page_config(page_title="KEDB Curator MVP",layout="wide")
+from kedb.application.workflows.curator import GRAPH_EDGES, GRAPH_NODES, workflow_dot
+
+API = os.getenv("KEDB_API_URL", "http://127.0.0.1:8001").rstrip("/")
+DEFAULT_REVIEWER = os.getenv("KEDB_DEFAULT_REVIEWER", "human-reviewer")
+
+st.set_page_config(page_title="Known Error Curator", page_icon="▶", layout="wide")
 st.title("Known Error DB Curator")
-curate_tab,search_tab,resolve_tab=st.tabs(["CSV Curation Queue","Search KEDB","Resolve Ticket"])
+st.caption("Process tickets in the background and review proposals as they arrive.")
 
 
-def get(path):
-    r=httpx.get(API+path,timeout=240); r.raise_for_status(); return r.json()
+def api(method: str, path: str, **kwargs):
+    try:
+        response = requests.request(method, f"{API}{path}", timeout=300, **kwargs)
+        if not response.ok:
+            st.error(f"API {response.status_code}: {response.text}")
+            return None
+        return response.json()
+    except requests.RequestException as exc:
+        st.error(f"Cannot reach backend: {exc}")
+        return None
 
 
-def post(path,payload=None,files=None,params=None):
-    r=httpx.post(API+path,json=payload if files is None else None,files=files,params=params,timeout=240)
-    r.raise_for_status(); return r.json()
-
-
-def load_next(batch_id):
-    data=get(f"/api/imports/{batch_id}/next")
-    st.session_state.current_item=data.get("item")
-    st.session_state.current_workflow=None
-    if data.get("item") and data["item"].get("workflow_id"):
-        snap=get(f"/api/workflows/{data['item']['workflow_id']}")
-        st.session_state.current_workflow={
-            "workflow_id":data["item"]["workflow_id"],
-            "status":"AWAITING_REVIEW",
-            "proposal":snap.get("values",{}).get("proposal"),
-            "evaluation":snap.get("values",{}).get("evaluation"),
-            "candidates":snap.get("values",{}).get("candidates",[]),
-        }
-    return data
-
-
-with curate_tab:
-    st.subheader("1. Import Jira CSV")
-    uploaded=st.file_uploader("Jira CSV export",type=["csv"])
-    include_unresolved=st.checkbox("Include unresolved issues in the review queue",value=True,
-        help="Useful for reviewing every CSV row. Turn off to curate only rows that have Resolution/Resolved populated.")
-    if st.button("Import CSV",type="primary",disabled=uploaded is None):
-        out=post("/api/imports/jira-csv",files={"file":(uploaded.name,uploaded.getvalue(),"text/csv")},params={"include_unresolved":str(include_unresolved).lower()})
-        st.session_state.batch_id=out["id"]
-        st.session_state.current_item=None
-        st.session_state.current_workflow=None
-        st.success(f"Imported {out['valid_rows']} rows from {out['filename']}")
-
-    batch_id=st.session_state.get("batch_id")
-    if batch_id:
-        summary=get(f"/api/imports/{batch_id}")
-        c1,c2,c3,c4=st.columns(4)
-        c1.metric("CSV rows",summary["total_rows"])
-        c2.metric("Queued",summary["valid_rows"])
-        c3.metric("Skipped",summary["skipped_rows"])
-        c4.metric("Failed",summary["invalid_rows"])
-        st.caption(f"Batch {batch_id} · states: {summary.get('item_counts',{})}")
-
-        if st.session_state.get("current_item") is None:
-            load_next(batch_id)
-
-        item=st.session_state.get("current_item")
-        if not item:
-            st.success("No incidents remain in this review queue.")
-        else:
-            issue=item.get("issue") or {}
-            st.divider()
-            st.subheader(f"2. Review incident — CSV row {item['row_number']}")
-            top1,top2,top3,top4=st.columns(4)
-            top1.text_input("Issue key",issue.get("external_key") or "",disabled=True)
-            top2.text_input("Status",issue.get("status") or "",disabled=True)
-            top3.text_input("Priority",issue.get("priority") or "",disabled=True)
-            top4.text_input("Issue type",issue.get("issue_type") or "",disabled=True)
-            st.text_input("Summary",issue.get("summary") or "",disabled=True)
-            left,right=st.columns(2)
-            with left: st.text_area("Description",issue.get("description") or "",height=150,disabled=True)
-            with right: st.text_area("Resolution",issue.get("resolution") or "",height=150,disabled=True)
-            if not issue.get("resolution") and not issue.get("resolved_at"):
-                st.warning("This Jira row is unresolved. You chose to include unresolved issues, so the curator may have weak evidence for a reusable solution.")
-
-            wf=st.session_state.get("current_workflow")
-            if not wf:
-                if st.button("Analyze this incident",type="primary"):
-                    wf=post(f"/api/imports/{batch_id}/items/{item['id']}/process",{})
-                    st.session_state.current_workflow=wf
-                    st.rerun()
+@st.fragment(run_every=3)
+def render_csv_review():
+    st.subheader("CSV Incident Review")
+    play, pause = st.columns([1, 5])
+    if play.button("Play", type="primary"):
+        started = api("POST", "/api/batches/play")
+        if started:
+            st.session_state["batch_id"] = started["batch_id"]
+    batch_id = st.session_state.get("batch_id")
+    batch = api("GET", f"/api/batches/{batch_id}" if batch_id else "/api/batches/current")
+    if batch:
+        st.session_state["batch_id"] = batch["batch_id"]
+    if pause.button("Pause", disabled=not batch or batch["status"] != "RUNNING"):
+        if api("POST", f"/api/batches/{batch['batch_id']}/pause"):
+            st.rerun()
+    if not batch:
+        st.info("Press Play to process the CSV in the background. Tickets needing review will appear here.")
+        return
+    st.caption(f"CSV: `{batch['source']}`")
+    st.progress(batch["processed"] / max(batch["total"], 1),
+                text=f"Prepared {batch['processed']} of {batch['total']} tickets")
+    waiting = batch["waiting"]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Ready for review", len(waiting))
+    c2.metric("Finished", batch["processed"] - len(waiting))
+    c3.metric("Background processing", batch["status"])
+    seen = st.session_state.setdefault("seen_workflows", set())
+    new_ids = {item["workflow_id"] for item in waiting} - seen
+    if new_ids:
+        st.toast(f"{len(new_ids)} new ticket(s) ready for review")
+        st.session_state["seen_workflows"] = seen | new_ids
+    if batch.get("error"):
+        st.error(f"Background processing stopped: {batch['error']}. Press Play to retry this ticket.")
+    elif batch["status"] == "PAUSED":
+        st.info("Background processing paused. The current ticket may still finish; reviews remain available.")
+    elif batch["status"] == "COMPLETE":
+        st.success("All tickets processed. Review the remaining proposals below." if waiting
+                   else "All tickets processed and reviewed.")
+    else:
+        st.caption("Processing continues while you review, even if you close this browser tab.")
+    state = None
+    if waiting:
+        options = {item["workflow_id"]: f"{item['external_key']} ? {item['summary']}" for item in waiting}
+        selected = st.selectbox("Ready for review", list(options),
+                                format_func=options.get, key="selected_workflow")
+        state = api("GET", f"/api/workflows/{selected}")
+        if state and state.get("status") != "WAITING_FOR_REVIEW":
+            state = None
+    elif batch["status"] == "RUNNING":
+        st.info("No tickets need review yet. This view refreshes automatically.")
+    if state:
+        issue, proposal = state["issue"], state["proposal"]
+        left, right = st.columns(2)
+        with left:
+            st.subheader(issue["external_key"])
+            st.write(issue["summary"])
+            st.markdown("**Description**")
+            st.write(issue["description"])
+            st.markdown("**Resolution**")
+            st.write(issue["resolution"])
+        with right:
+            st.subheader("AI proposal")
+            st.markdown(f"**Action: {proposal['action']}**")
+            if proposal.get("target_known_error_id"):
+                st.caption(f"Target Known Error: {proposal['target_known_error_id']}")
+            for label, key in (("Title", "title"), ("Problem", "problem"), ("Solution", "solution")):
+                st.markdown(f"**{label}**")
+                st.write(proposal[key])
+            st.caption(state["evaluation"].get("reasoning", ""))
+        if state.get("candidates"):
+            with st.expander("Search scores"):
+                st.dataframe(pd.DataFrame(state["candidates"]), hide_index=True)
+        with st.form(f"review-{state['workflow_id']}-{state.get('revision_count', 0)}"):
+            decision = st.selectbox("Review decision", ["APPROVE", "MODIFY", "REJECT"])
+            reviewer = st.text_input("Reviewer", DEFAULT_REVIEWER)
+            feedback = st.text_area("Feedback for AI modification / review notes")
+            st.caption("Modify asks the AI to revise and returns here. Reject publishes nothing.")
+            submitted = st.form_submit_button("Submit decision", type="primary")
+        if submitted:
+            if decision == "MODIFY" and not feedback.strip():
+                st.error("Provide feedback so the AI knows what to modify.")
             else:
-                st.divider(); st.subheader("3. AI recommendation + human review")
-                ev=wf.get("evaluation") or {}
-                e1,e2,e3=st.columns(3)
-                e1.metric("Recommendation",ev.get("recommendation","—"))
-                conf=ev.get("confidence")
-                e2.metric("Confidence",f"{conf:.2f}" if isinstance(conf,(int,float)) else "—")
-                e3.metric("Revision",wf.get("revision_count",0))
-                if ev.get("reasoning"): st.info(ev["reasoning"])
-                if wf.get("candidates"):
-                    with st.expander("Retrieved KEDB candidates"):
-                        st.dataframe(wf["candidates"],use_container_width=True)
-
-                proposal=wf.get("proposal") or {}
-                with st.form("review_form",clear_on_submit=False):
-                    title=st.text_input("Proposed title",proposal.get("title",issue.get("summary", "")))
-                    problem=st.text_area("Problem",proposal.get("problem",issue.get("description", "")),height=110)
-                    root_cause=st.text_area("Root cause",proposal.get("root_cause", ""),height=110)
-                    solution=st.text_area("Solution",proposal.get("solution",issue.get("resolution", "")),height=130)
-                    decision=st.radio("Decision",["APPROVE","MODIFY","REJECT"],horizontal=True,help="APPROVE publishes; MODIFY requests another revision; REJECT closes without publishing.")
-                    feedback=st.text_area("Reviewer feedback",help="For MODIFY, explain what should be revised. For REJECT, record why the incident should not be published.")
-                    submitted=st.form_submit_button("Submit review",type="primary")
-                if submitted:
-                    modified=None
-                    if decision=="MODIFY":
-                        modified={"title":title,"problem":problem,"root_cause":root_cause,"solution":solution}
-                    result=post(f"/api/reviews/{wf['workflow_id']}",{
-                        "decision":decision,"reviewer":"streamlit-reviewer","feedback":feedback or None,"modified_content":modified
-                    })
-                    if result["status"]=="AWAITING_REVIEW":
-                        st.session_state.current_workflow={**wf,**result}
-                        st.warning("Proposal revised. Review the same incident again before it can be published.")
-                        st.rerun()
-                    else:
-                        if decision=="APPROVE":
-                            st.success("Incident approved and published. Moving to the next CSV row.")
-                        else:
-                            st.warning("Incident rejected and not published. Moving to the next CSV row.")
-                        st.session_state.current_item=None
-                        st.session_state.current_workflow=None
-                        load_next(batch_id)
-                        st.rerun()
-
-                if st.button("SKIP INCIDENT"):
-                    post(f"/api/imports/{batch_id}/items/{item['id']}/skip",{})
-                    st.session_state.current_item=None
-                    st.session_state.current_workflow=None
-                    load_next(batch_id)
+                updated = api("POST", f"/api/workflows/{state['workflow_id']}/review", json={
+                    "decision": decision, "reviewer": reviewer, "feedback": feedback or None})
+                if updated:
+                    if updated["status"] != "WAITING_FOR_REVIEW":
+                        st.session_state.pop("selected_workflow", None)
                     st.rerun()
+    if batch["results"]:
+        with st.expander("Batch results"):
+            report = pd.DataFrame(batch["results"])
+            st.dataframe(report, hide_index=True)
+            st.download_button("Download results CSV", report.to_csv(index=False).encode(),
+                               "kedb_review_results.csv", "text/csv")
 
-with search_tab:
-    q=st.text_input("Search approved KEDB","Oracle connection timeout")
-    ec=st.text_input("Exact identifier/error code","")
-    if st.button("Search"):
-        st.dataframe(post("/api/retrieval/search",{"query":q,"error_code":ec or None}),use_container_width=True)
 
-with resolve_tab:
-    s=st.text_input("Ticket summary","Oracle application connection times out",key="resolve_summary")
-    d=st.text_area("Ticket description","Users report ORA-12170 while connecting.",key="resolve_desc")
-    if st.button("Generate grounded answer"):
-        st.json(post("/api/tickets/resolve",{"external_key":"CHAT-1","summary":s,"description":d,"resolution":"","error_code":None}))
+
+def render_graph() -> None:
+    st.subheader("LangGraph Workflow")
+    st.caption(
+        "This diagram is generated from the same node/edge definitions used by build_langgraph(). "
+        "Purple = AI reasoning, blue = retrieval, amber = human review, green = publication."
+    )
+
+    try:
+        st.graphviz_chart(workflow_dot(), use_container_width=True)
+    except Exception as exc:
+        st.warning(f"Graphviz rendering unavailable: {exc}")
+        st.code(workflow_dot(), language="dot")
+
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Nodes", len(GRAPH_NODES))
+    c2.metric("Edges", len(GRAPH_EDGES))
+    c3.metric("AI nodes", sum(1 for _id, _label, kind in GRAPH_NODES if kind == "ai"))
+    c4.metric(
+        "Human gates", sum(1 for _id, _label, kind in GRAPH_NODES if kind == "human")
+    )
+
+    with st.expander("Node inventory", expanded=False):
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {"node": node_id, "label": label, "kind": kind}
+                    for node_id, label, kind in GRAPH_NODES
+                ]
+            ),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    with st.expander("How the graph behaves", expanded=True):
+        st.markdown(
+            """
+            1. Jira fields are normalized and an LLM creates a structured retrieval plan.
+            2. Exact, full-text and vector searches fan out in parallel, then merge and rerank.
+            3. Any search score > 0.8 rejects; final score < 0.2 automatically creates. Otherwise the AI chooses CREATE or UPDATE.
+            4. Human review is a real LangGraph `interrupt()` node.
+            5. `MODIFY` requests AI revision and returns to human review.
+            6. `REJECT` ends the ticket without publishing.
+            7. Human approval or the low-score policy permits publication. The outbox schedules index materialization.
+            """
+        )
+
+    with st.expander("Local LangGraph Studio", expanded=False):
+        st.code(
+            "$env:PYTHONPATH=\"src\"\n"
+            "pip install -U \"langgraph-cli[inmem]\"\n"
+            "langgraph dev",
+            language="powershell",
+        )
+        st.write(
+            "The repository includes `langgraph.json` and "
+            "`src/kedb/application/workflows/studio.py` for the local Studio entrypoint."
+        )
+
+
+def render_status() -> None:
+    st.subheader("Deployment Status")
+    status = api("GET", "/api/system/status")
+    if status:
+        c1, c2, c3 = st.columns(3)
+        c1.metric("API", status.get("status", "unknown"))
+        c2.metric("Database", status.get("database", "unknown"))
+        c3.metric(
+            "AI Search",
+            "Configured" if status.get("ai_search_configured") else "Fallback",
+        )
+        st.json(status)
+
+
+with st.sidebar:
+    st.caption(f"Backend: {API}")
+    st.markdown("**App views**")
+    st.write("Use the tabs at the top for CSV review, the LangGraph workflow, and deployment status.")
+
+review_tab, graph_tab, status_tab = st.tabs(
+    ["CSV Incident Review", "Workflow Graph", "Status"]
+)
+
+with review_tab:
+    render_csv_review()
+
+with graph_tab:
+    render_graph()
+
+with status_tab:
+    render_status()

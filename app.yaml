@@ -1,0 +1,23 @@
+command:
+  - python
+  - start_app.py
+
+env:
+  - name: PYTHONPATH
+    value: "src"
+  - name: KEDB_ENV
+    value: "dev"
+  - name: KEDB_API_URL
+    value: "http://127.0.0.1:8001"
+  # Lakebase resource attachment automatically supplies PGHOST, PGPORT,
+  # PGDATABASE, PGUSER and PGSSLMODE. Copy the compute resource name from
+  # Lakebase -> production branch -> Computes -> Get ID into this value.
+  - name: ENDPOINT_NAME
+    value: "projects/kedb-dev/branches/production/endpoints/primary"
+  # Set these to the resources you created in Databricks Free Edition.
+  - name: DATABRICKS_AI_SEARCH_ENDPOINT
+    value: "kedb-search"
+  - name: DATABRICKS_AI_SEARCH_INDEX
+    value: "kedb_dev.knowledge.article_chunks_index"
+  - name: DATABRICKS_MODEL_ENDPOINT
+    value: "databricks-meta-llama-3-3-70b-instruct"

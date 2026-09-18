@@ -1,0 +1,6 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "curator": "./src/kedb/application/workflows/studio.py:graph"
+  }
+}

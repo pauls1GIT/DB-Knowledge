@@ -1,24 +1,19 @@
 import argparse, json, random
-from pathlib import Path
-
-TEMPLATES=[
- ("oracle_timeout","ORA-12170","Oracle connection timeout","Application cannot connect to Oracle; requests time out.","Network path or listener is unavailable.","Validate routing/listener, restore connectivity, then retry."),
- ("tls_expired","TLS-CERT","Expired TLS certificate","Client rejects service TLS certificate.","Service certificate expired.","Renew the certificate and restart/reload the dependent service."),
- ("disk_full","ENOSPC","Filesystem full","Service cannot write files because disk is full.","Disk capacity exhausted.","Remove/archive safe data or extend storage, then restart failed workload."),
- ("dns_failure","DNS","DNS resolution failure","Application cannot resolve backend hostname.","DNS record or resolver configuration is incorrect.","Correct DNS/resolver configuration and verify name resolution."),
+FAMILIES=[
+ ('database_connection_timeout','Oracle application connection timeout','ORA-12170'),
+ ('tls_certificate','Application TLS certificate expired','TLS-CERT-EXPIRED'),
+ ('disk_space','Service failed because disk is full','DISK-FULL'),
+ ('dns','Application cannot resolve database hostname','DNS-FAIL'),
+ ('memory','Worker terminated after memory exhaustion','OOM'),
 ]
-PARAPHRASES=["Users report {s}.","Resolved incident: {s}.","Production alert indicates {s}.","Service impact caused by {s}."]
-
-def generate(n,seed):
- r=random.Random(seed); out=[]
- for i in range(n):
-  g,code,title,problem,cause,solution=r.choice(TEMPLATES)
-  roll=r.random(); kind="unique" if roll<.70 else "semantic_duplicate" if roll<.90 else "near_duplicate" if roll<.95 else "ambiguous"
-  summary=title if kind=="near_duplicate" else r.choice(PARAPHRASES).format(s=title.lower())
-  if kind=="ambiguous": summary=title+" with intermittent network symptoms"
-  out.append({"external_key":f"INC-{i+1:04d}","summary":summary,"description":problem,"resolution":solution,"error_code":code,"ground_truth_error_group":g,"kind":kind})
- return out
-
-if __name__=="__main__":
- p=argparse.ArgumentParser(); p.add_argument("--count",type=int,default=200); p.add_argument("--seed",type=int,default=42); p.add_argument("--output",default="mock_incidents.json")
- a=p.parse_args(); Path(a.output).write_text(json.dumps(generate(a.count,a.seed),indent=2)); print(f"Wrote {a.count} incidents to {a.output}")
+def generate(count=200,seed=42):
+    r=random.Random(seed); out=[]
+    for i in range(count):
+        group,base,code=r.choice(FAMILIES); mode=r.choices(['unique','semantic_duplicate','near_duplicate','ambiguous'],[70,20,5,5])[0]
+        summary=base if mode=='near_duplicate' else f'{base} - incident {i+1}'
+        if mode=='semantic_duplicate': summary=f'Application reports {group.replace("_"," ")} while completing request'
+        out.append({'external_key':f'INC-{i+1:03d}','summary':summary,'description':f'Synthetic {mode} for {group}','resolution':f'Remediate {group.replace("_"," ")}.','error_code':code if r.random()<0.7 else None,'ground_truth_error_group':group,'ground_truth_known_error':group})
+    return out
+if __name__=='__main__':
+    p=argparse.ArgumentParser(); p.add_argument('--count',type=int,default=200); p.add_argument('--seed',type=int,default=42); p.add_argument('--output',default='mock_incidents.json'); a=p.parse_args()
+    with open(a.output,'w') as f: json.dump(generate(a.count,a.seed),f,indent=2)
