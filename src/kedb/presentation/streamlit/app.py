@@ -124,6 +124,48 @@ def render_csv_review():
                                "kedb_review_results.csv", "text/csv")
 
 
+def render_resolve_ticket() -> None:
+    st.subheader("Resolve Ticket")
+    st.caption(
+        "Describe an incident and generate an answer grounded in approved KEDB knowledge."
+    )
+
+    summary = st.text_input(
+        "Ticket summary",
+        placeholder="e.g. Oracle application connection times out",
+    )
+
+    description = st.text_area(
+        "Ticket description",
+        placeholder="Describe the problem, symptoms, error messages, etc.",
+    )
+
+    if st.button("Generate grounded answer", type="primary"):
+        if not summary.strip() and not description.strip():
+            st.warning("Enter a ticket summary or description.")
+        else:
+            result = api(
+                "POST",
+                "/api/tickets/resolve",
+                json={
+                    "summary": summary,
+                    "description": description,
+                },
+             )
+        if result:
+            candidates = result.get("candidates", [])
+
+            if candidates:
+                 st.success("Relevant KEDB knowledge found.")
+                 st.dataframe(
+                    pd.DataFrame(candidates),
+                    hide_index=True,
+                    use_container_width=True,
+                )
+            else:
+                st.warning("No relevant KEDB knowledge was found.")
+
+
 
 def render_graph() -> None:
     st.subheader("LangGraph Workflow")
@@ -203,12 +245,15 @@ with st.sidebar:
     st.markdown("**App views**")
     st.write("Use the tabs at the top for CSV review, the LangGraph workflow, and deployment status.")
 
-review_tab, graph_tab, status_tab = st.tabs(
-    ["CSV Incident Review", "Workflow Graph", "Status"]
+review_tab, resolve_tab, graph_tab, status_tab = st.tabs(
+    ["CSV Incident Review", "Resolve Ticket", "Workflow Graph", "Status"]
 )
 
 with review_tab:
     render_csv_review()
+
+with resolve_tab:
+    render_resolve_ticket()
 
 with graph_tab:
     render_graph()

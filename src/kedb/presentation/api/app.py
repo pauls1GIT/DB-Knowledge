@@ -65,6 +65,10 @@ class JiraIn(BaseModel):
 class SearchIn(BaseModel):
     query: str
 
+class ResolveTicketIn(BaseModel):
+    summary: str
+    description: str
+
 
 class ReviewIn(BaseModel):
     decision: ReviewDecision
@@ -192,6 +196,18 @@ def versions(known_error_id: UUID):
 def search(body: SearchIn):
     retriever = RetrievalCoordinator(make_search_adapter())
     return [candidate.__dict__ for candidate in retriever.search(body.query, settings.kedb_search_top_k)]
+
+@app.post("/api/tickets/resolve")
+def resolve_ticket(body: ResolveTicketIn):
+    query = f"{body.summary}\n{body.description}"
+
+    retriever = RetrievalCoordinator(make_search_adapter())
+    candidates = retriever.search(query, settings.kedb_search_top_k)
+
+    return {
+        "query": query,
+        "candidates": [candidate.__dict__ for candidate in candidates],
+    }
 
 
 @app.post("/api/publications")
