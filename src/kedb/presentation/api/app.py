@@ -112,6 +112,7 @@ def make_search_adapter():
                             "known_error_id": ke.id,
                             "article_version_id": version.id,
                             "title": version.title,
+                            "resolution": version.solution,
                             "content": " ".join(
                                 [version.problem, version.root_cause, version.solution]
                             ),

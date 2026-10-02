@@ -32,6 +32,7 @@ class InMemorySearch:
                         known_error_id=doc["known_error_id"],
                         article_version_id=doc["article_version_id"],
                         title=doc["title"],
+                        resolution=doc.get("resolution", ""),
                         exact_score=exact,
                         lexical_score=lexical,
                         vector_score=vector,
