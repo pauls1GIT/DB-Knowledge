@@ -20,7 +20,7 @@ from kedb.application.workflows.batch import BatchWorker
 
 from kedb.application.dto import KnowledgeProposal
 from kedb.application.retrieval import RetrievalCoordinator
-from kedb.application.use_cases import PublishApprovedKnowledge
+from kedb.application.use_cases import PublishApprovedKnowledge, GenerateGroundedAnswer
 from kedb.config import Settings
 from kedb.domain import HumanReview, JiraIssue, ReviewDecision
 from kedb.infrastructure.lakebase import Database, SqlRepositories
@@ -68,6 +68,11 @@ class SearchIn(BaseModel):
 class ResolveTicketIn(BaseModel):
     summary: str
     description: str
+
+
+class GroundedQuestionIn(BaseModel):
+    question: str
+    evidence: list[dict]
 
 
 class ReviewIn(BaseModel):
@@ -210,6 +215,28 @@ def resolve_ticket(body: ResolveTicketIn):
         "candidates": [candidate.__dict__ for candidate in candidates],
     }
 
+@app.post("/api/tickets/grounded-answer")
+def grounded_answer(body: GroundedQuestionIn):
+    if not body.question.strip():
+        raise HTTPException(400, "Question is required.")
+
+    evidence = [
+        {
+            "title": item["title"],
+            "content": item.get("resolution", ""),
+            "known_error_id": item.get("known_error_id"),
+            "article_version_id": item.get("article_version_id"),
+        }
+        for item in body.evidence
+        if item.get("resolution")
+    ]
+
+    if not evidence:
+        raise HTTPException(400, "No KEDB resolution evidence was provided.")
+
+    generator = GenerateGroundedAnswer(make_llm())
+    return generator.execute(body.question, evidence)
+
 
 @app.post("/api/publications")
 def publish(body: PublishIn):
@@ -239,18 +266,26 @@ def publish(body: PublishIn):
 
 
 def make_llm():
-    from kedb.infrastructure.llm.databricks_model import DatabricksModelServingProvider
+    if settings.databricks_model_endpoint:
+        from kedb.infrastructure.llm.databricks_model import DatabricksModelServingProvider
 
-    if not settings.databricks_model_endpoint:
-        raise HTTPException(503, "Set DATABRICKS_MODEL_ENDPOINT to run the AI curator.")
-    host, token = settings.databricks_host, settings.databricks_token
-    if not host or not token:
-        from databricks.sdk import WorkspaceClient
-        workspace = WorkspaceClient()
-        host = workspace.config.host
-        token = workspace.config.authenticate()["Authorization"].removeprefix("Bearer ")
-    return DatabricksModelServingProvider(
-        base_url=host, token=token, model=settings.databricks_model_endpoint)
+        host, token = settings.databricks_host, settings.databricks_token
+        if not host or not token:
+            from databricks.sdk import WorkspaceClient
+
+            workspace = WorkspaceClient()
+            host = workspace.config.host
+            token = workspace.config.authenticate()["Authorization"].removeprefix("Bearer ")
+
+        return DatabricksModelServingProvider(
+            base_url=host,
+            token=token,
+            model=settings.databricks_model_endpoint,
+        )
+
+    from kedb.infrastructure.llm.ollama_model import OllamaModelProvider
+
+    return OllamaModelProvider()
 
 
 def workflow_for(session):

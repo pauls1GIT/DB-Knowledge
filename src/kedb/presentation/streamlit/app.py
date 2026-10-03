@@ -140,7 +140,7 @@ def render_resolve_ticket() -> None:
         placeholder="Describe the problem, symptoms, error messages, etc.",
     )
 
-    if st.button("Generate grounded answer", type="primary"):
+    if st.button("Find relevant knowledge", type="primary"):
         if not summary.strip() and not description.strip():
             st.warning("Enter a ticket summary or description.")
         else:
@@ -151,19 +151,53 @@ def render_resolve_ticket() -> None:
                     "summary": summary,
                     "description": description,
                 },
-             )
-        if result:
-            candidates = result.get("candidates", [])
+            )
 
-            if candidates:
-                 st.success("Relevant KEDB knowledge found.")
-                 st.dataframe(
-                    pd.DataFrame(candidates),
-                    hide_index=True,
-                    use_container_width=True,
+            st.session_state["resolve_candidates"] = result.get("candidates", [])
+            st.session_state["resolve_summary"] = summary
+            st.session_state["resolve_description"] = description
+
+    candidates = st.session_state.get("resolve_candidates")
+
+    if candidates is not None:
+        if candidates:
+            st.success("Relevant KEDB knowledge found.")
+
+            st.dataframe(
+                pd.DataFrame(candidates),
+                hide_index=True,
+                use_container_width=True,
+            )
+
+            st.divider()
+
+            st.subheader("Ask about this incident")
+            st.caption(
+                "Ask a question using the retrieved KEDB knowledge as context."
+            )
+
+            question = st.text_input(
+                "Question",
+                placeholder="e.g. What should I do to resolve this?",
+                key="resolve_question",
+            )
+
+            if st.button("Ask", disabled=not question.strip()):
+                 answer = api(
+                    "POST",
+                    "/api/tickets/grounded-answer",
+                    json={
+                        "question": question,
+                        "evidence": candidates,
+                    },
                 )
-            else:
-                st.warning("No relevant KEDB knowledge was found.")
+                 if answer:
+                     st.markdown("### Answer")
+                     st.write(answer["answer"])
+                     st.caption(f"Confidence: {answer['confidence']:.2f}")
+
+        else:
+            st.warning("No relevant KEDB knowledge was found.")
 
 
 
