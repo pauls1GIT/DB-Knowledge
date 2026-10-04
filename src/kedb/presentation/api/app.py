@@ -73,6 +73,7 @@ class ResolveTicketIn(BaseModel):
 class GroundedQuestionIn(BaseModel):
     question: str
     evidence: list[dict]
+    history: list[dict] = []
 
 
 class ReviewIn(BaseModel):
@@ -235,7 +236,7 @@ def grounded_answer(body: GroundedQuestionIn):
         raise HTTPException(400, "No KEDB resolution evidence was provided.")
 
     generator = GenerateGroundedAnswer(make_llm())
-    return generator.execute(body.question, evidence)
+    return generator.execute(body.question, evidence, body.history)
 
 
 @app.post("/api/publications")

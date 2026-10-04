@@ -176,6 +176,13 @@ def render_resolve_ticket() -> None:
                 "Ask a question using the retrieved KEDB knowledge as context."
             )
 
+            if "resolve_messages" not in st.session_state:
+                st.session_state.resolve_messages = []
+
+            for message in st.session_state.resolve_messages:
+                with st.chat_message(message["role"]):
+                    st.write(message["content"])
+
             question = st.text_input(
                 "Question",
                 placeholder="e.g. What should I do to resolve this?",
@@ -183,18 +190,27 @@ def render_resolve_ticket() -> None:
             )
 
             if st.button("Ask", disabled=not question.strip()):
+  
+                 st.session_state.resolve_messages.append({
+                    "role": "user",
+                    "content": question,
+                })
+                   
                  answer = api(
                     "POST",
                     "/api/tickets/grounded-answer",
                     json={
                         "question": question,
                         "evidence": candidates,
+                        "history": st.session_state.resolve_messages[:-1],
                     },
                 )
                  if answer:
-                     st.markdown("### Answer")
-                     st.write(answer["answer"])
-                     st.caption(f"Confidence: {answer['confidence']:.2f}")
+                    st.session_state.resolve_messages.append({
+                        "role": "assistant",
+                        "content": answer["answer"],
+                    })
+                    st.rerun()
 
         else:
             st.warning("No relevant KEDB knowledge was found.")
