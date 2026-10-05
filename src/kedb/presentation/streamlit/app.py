@@ -130,19 +130,77 @@ def render_resolve_ticket() -> None:
         "Describe an incident and generate an answer grounded in approved KEDB knowledge."
     )
 
+    if "resolve_messages" not in st.session_state:
+        st.session_state.resolve_messages = []
+
+    for message in st.session_state.resolve_messages:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+
+    user_message = st.chat_input(
+        "Describe the incident or ask a follow-up question..."
+    )
+
+    if user_message:
+        st.session_state.resolve_messages.append({
+            "role": "user",
+            "content": user_message,
+        })
+        candidates = st.session_state.get("resolve_candidates", [])
+
+        if not candidates:
+            result = api(
+                "POST",
+                "/api/tickets/resolve",
+                json={
+                    "summary": user_message,
+                    "description": "",
+                },
+            )
+            st.session_state["resolve_candidates"] = result.get("candidates", [])
+            candidates = st.session_state["resolve_candidates"]
+
+        if candidates:
+            answer = api(
+                "POST",
+                "/api/tickets/grounded-answer",
+                json={
+                    "question": user_message,
+                    "evidence": candidates,
+                    "history": st.session_state.resolve_messages[:-1],
+                },
+            )
+            if answer:
+                st.session_state.resolve_messages.append({
+                    "role": "assistant",
+                    "content": answer["answer"],
+                })
+                st.rerun()
+        else:
+            st.session_state.resolve_messages.append({
+                "role": "assistant",
+                "content": "I couldn't find relevant approved KEDB knowledge for this incident.",
+            })
+            st.rerun()
+        
+
+
+def render_search_kedb() -> None:
+    st.subheader("Search KEDB")
+    st.caption(
+        "Search approved KEDB knowledge for relevant known errors and resolutions."
+    )
     summary = st.text_input(
-        "Ticket summary",
+        "Search summary",
         placeholder="e.g. Oracle application connection times out",
     )
-
     description = st.text_area(
-        "Ticket description",
-        placeholder="Describe the problem, symptoms, error messages, etc.",
+    "Search description",
+    placeholder="Describe the problem, symptoms, error messages, etc.",
     )
-
-    if st.button("Find relevant knowledge", type="primary"):
+    if st.button("Search KEDB", type="primary"):
         if not summary.strip() and not description.strip():
-            st.warning("Enter a ticket summary or description.")
+            st.warning("Enter a search summary or description.")
         else:
             result = api(
                 "POST",
@@ -153,11 +211,9 @@ def render_resolve_ticket() -> None:
                 },
             )
 
-            st.session_state["resolve_candidates"] = result.get("candidates", [])
-            st.session_state["resolve_summary"] = summary
-            st.session_state["resolve_description"] = description
+            st.session_state["search_candidates"] = result.get("candidates", [])
 
-    candidates = st.session_state.get("resolve_candidates")
+    candidates = st.session_state.get("search_candidates")
 
     if candidates is not None:
         if candidates:
@@ -168,54 +224,8 @@ def render_resolve_ticket() -> None:
                 hide_index=True,
                 use_container_width=True,
             )
-
-            st.divider()
-
-            st.subheader("Ask about this incident")
-            st.caption(
-                "Ask a question using the retrieved KEDB knowledge as context."
-            )
-
-            if "resolve_messages" not in st.session_state:
-                st.session_state.resolve_messages = []
-
-            for message in st.session_state.resolve_messages:
-                with st.chat_message(message["role"]):
-                    st.write(message["content"])
-
-            question = st.text_input(
-                "Question",
-                placeholder="e.g. What should I do to resolve this?",
-                key="resolve_question",
-            )
-
-            if st.button("Ask", disabled=not question.strip()):
-  
-                 st.session_state.resolve_messages.append({
-                    "role": "user",
-                    "content": question,
-                })
-                   
-                 answer = api(
-                    "POST",
-                    "/api/tickets/grounded-answer",
-                    json={
-                        "question": question,
-                        "evidence": candidates,
-                        "history": st.session_state.resolve_messages[:-1],
-                    },
-                )
-                 if answer:
-                    st.session_state.resolve_messages.append({
-                        "role": "assistant",
-                        "content": answer["answer"],
-                    })
-                    st.rerun()
-
         else:
             st.warning("No relevant KEDB knowledge was found.")
-
-
 
 def render_graph() -> None:
     st.subheader("LangGraph Workflow")
@@ -295,8 +305,8 @@ with st.sidebar:
     st.markdown("**App views**")
     st.write("Use the tabs at the top for CSV review, the LangGraph workflow, and deployment status.")
 
-review_tab, resolve_tab, graph_tab, status_tab = st.tabs(
-    ["CSV Incident Review", "Resolve Ticket", "Workflow Graph", "Status"]
+review_tab, resolve_tab, search_tab, graph_tab, status_tab = st.tabs(
+    ["CSV Incident Review", "Resolve Ticket", "Search KEDB", "Workflow Graph", "Status"]
 )
 
 with review_tab:
@@ -307,6 +317,9 @@ with resolve_tab:
 
 with graph_tab:
     render_graph()
+
+with search_tab:
+    render_search_kedb()
 
 with status_tab:
     render_status()
