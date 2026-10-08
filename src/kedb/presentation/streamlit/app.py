@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 
 import pandas as pd
 import requests
@@ -11,7 +12,7 @@ from kedb.application.workflows.curator import GRAPH_EDGES, GRAPH_NODES, workflo
 API = os.getenv("KEDB_API_URL", "http://127.0.0.1:8001").rstrip("/")
 DEFAULT_REVIEWER = os.getenv("KEDB_DEFAULT_REVIEWER", "human-reviewer")
 
-st.set_page_config(page_title="Known Error Curator", page_icon="▶", layout="wide")
+st.set_page_config(page_title="Known Error Curator", page_icon="â–¶", layout="wide")
 st.title("Known Error DB Curator")
 st.caption("Process tickets in the background and review proposals as they arrive.")
 
@@ -29,11 +30,30 @@ def api(method: str, path: str, **kwargs):
 
 
 @st.fragment(run_every=3)
-def render_csv_review():
-    st.subheader("CSV Incident Review")
-    play, pause = st.columns([1, 5])
+def render_incident_review():
+    st.subheader("Incident Review")
+    source = st.radio("Input source", ["JSON", "Jira API"], horizontal=True)
+    payload = {"source": "json" if source == "JSON" else "jira"}
+    uploaded = None
+    if source == "JSON":
+        uploaded = st.file_uploader("Upload tickets JSON (optional; defaults to server dataset)", type=["json"])
+    else:
+        jql = st.text_area("JQL query", placeholder="Leave blank to use the server query")
+        if jql.strip():
+            payload["jql"] = jql.strip()
+        st.caption("Uses Jira Cloud credentials configured on the server.")
+    play, pause, resume = st.columns([1, 1, 4])
     if play.button("Play", type="primary"):
-        started = api("POST", "/api/batches/play")
+        valid = True
+        if uploaded is not None:
+            try:
+                payload["tickets"] = json.loads(uploaded.getvalue().decode("utf-8-sig"))
+                if not isinstance(payload["tickets"], list):
+                    raise ValueError("JSON must contain an array of ticket objects")
+            except (ValueError, UnicodeError) as exc:
+                st.error(f"Invalid JSON: {exc}")
+                valid = False
+        started = api("POST", "/api/batches/play", json=payload) if valid else None
         if started:
             st.session_state["batch_id"] = started["batch_id"]
     batch_id = st.session_state.get("batch_id")
@@ -43,10 +63,13 @@ def render_csv_review():
     if pause.button("Pause", disabled=not batch or batch["status"] != "RUNNING"):
         if api("POST", f"/api/batches/{batch['batch_id']}/pause"):
             st.rerun()
+    if resume.button("Resume current batch", disabled=not batch or batch["status"] not in {"PAUSED", "ERROR"}):
+        if api("POST", f"/api/batches/{batch['batch_id']}/resume"):
+            st.rerun()
     if not batch:
-        st.info("Press Play to process the CSV in the background. Tickets needing review will appear here.")
+        st.info("Press Play to process the selected input in the background. Tickets needing review will appear here.")
         return
-    st.caption(f"CSV: `{batch['source']}`")
+    st.caption(f"Source: `{batch['source']}`")
     st.progress(batch["processed"] / max(batch["total"], 1),
                 text=f"Prepared {batch['processed']} of {batch['total']} tickets")
     waiting = batch["waiting"]
@@ -60,7 +83,7 @@ def render_csv_review():
         st.toast(f"{len(new_ids)} new ticket(s) ready for review")
         st.session_state["seen_workflows"] = seen | new_ids
     if batch.get("error"):
-        st.error(f"Background processing stopped: {batch['error']}. Press Play to retry this ticket.")
+        st.error(f"Background processing stopped: {batch['error']}. Press Resume current batch to retry this ticket.")
     elif batch["status"] == "PAUSED":
         st.info("Background processing paused. The current ticket may still finish; reviews remain available.")
     elif batch["status"] == "COMPLETE":
@@ -124,6 +147,108 @@ def render_csv_review():
                                "kedb_review_results.csv", "text/csv")
 
 
+def render_resolve_ticket() -> None:
+    st.subheader("Resolve Ticket")
+    st.caption(
+        "Describe an incident and generate an answer grounded in approved KEDB knowledge."
+    )
+
+    if "resolve_messages" not in st.session_state:
+        st.session_state.resolve_messages = []
+
+    for message in st.session_state.resolve_messages:
+        with st.chat_message(message["role"]):
+            st.write(message["content"])
+
+    user_message = st.chat_input(
+        "Describe the incident or ask a follow-up question..."
+    )
+
+    if user_message:
+        st.session_state.resolve_messages.append({
+            "role": "user",
+            "content": user_message,
+        })
+        candidates = st.session_state.get("resolve_candidates", [])
+
+        if not candidates:
+            result = api(
+                "POST",
+                "/api/tickets/resolve",
+                json={
+                    "summary": user_message,
+                    "description": "",
+                },
+            )
+            st.session_state["resolve_candidates"] = (result or {}).get("candidates", [])
+            candidates = st.session_state["resolve_candidates"]
+
+        if candidates:
+            answer = api(
+                "POST",
+                "/api/tickets/grounded-answer",
+                json={
+                    "question": user_message,
+                    "evidence": candidates,
+                    "history": st.session_state.resolve_messages[:-1],
+                },
+            )
+            if answer:
+                st.session_state.resolve_messages.append({
+                    "role": "assistant",
+                    "content": answer["answer"],
+                })
+                st.rerun()
+        else:
+            st.session_state.resolve_messages.append({
+                "role": "assistant",
+                "content": "I couldn't find relevant approved KEDB knowledge for this incident.",
+            })
+            st.rerun()
+
+
+
+def render_search_kedb() -> None:
+    st.subheader("Search KEDB")
+    st.caption(
+        "Search approved KEDB knowledge for relevant known errors and resolutions."
+    )
+    summary = st.text_input(
+        "Search summary",
+        placeholder="e.g. Oracle application connection times out",
+    )
+    description = st.text_area(
+    "Search description",
+    placeholder="Describe the problem, symptoms, error messages, etc.",
+    )
+    if st.button("Search KEDB", type="primary"):
+        if not summary.strip() and not description.strip():
+            st.warning("Enter a search summary or description.")
+        else:
+            result = api(
+                "POST",
+                "/api/tickets/resolve",
+                json={
+                    "summary": summary,
+                    "description": description,
+                },
+            )
+
+            st.session_state["search_candidates"] = (result or {}).get("candidates", [])
+
+    candidates = st.session_state.get("search_candidates")
+
+    if candidates is not None:
+        if candidates:
+            st.success("Relevant KEDB knowledge found.")
+
+            st.dataframe(
+                pd.DataFrame(candidates),
+                hide_index=True,
+                use_container_width=True,
+            )
+        else:
+            st.warning("No relevant KEDB knowledge was found.")
 
 def render_graph() -> None:
     st.subheader("LangGraph Workflow")
@@ -195,23 +320,59 @@ def render_status() -> None:
             "AI Search",
             "Configured" if status.get("ai_search_configured") else "Fallback",
         )
+        chunks = status.get("article_chunks", {})
+        if chunks.get("configuration_required"):
+            st.warning(chunks["configuration_required"])
+        if chunks.get("last_error"):
+            st.error(f"Article chunk materialization: {chunks['last_error']}")
+        if chunks:
+            st.metric("Publications waiting for chunks / sync", chunks.get("pending_publications") or 0)
         st.json(status)
 
 
 with st.sidebar:
     st.caption(f"Backend: {API}")
     st.markdown("**App views**")
-    st.write("Use the tabs at the top for CSV review, the LangGraph workflow, and deployment status.")
+    st.write("Use the tabs at the top for incident review, the LangGraph workflow, and deployment status.")
 
-review_tab, graph_tab, status_tab = st.tabs(
-    ["CSV Incident Review", "Workflow Graph", "Status"]
+review_tab, resolve_tab, search_tab, graph_tab, status_tab, tickets_tab = st.tabs(
+    ["Incident Review", "Resolve Ticket", "Search KEDB", "Workflow Graph", "Status", "Manage Tickets"]
 )
 
 with review_tab:
-    render_csv_review()
+    render_incident_review()
+
+with resolve_tab:
+    render_resolve_ticket()
 
 with graph_tab:
     render_graph()
 
+with search_tab:
+    render_search_kedb()
+
 with status_tab:
     render_status()
+
+with tickets_tab:
+    st.subheader("Manage Tickets")
+    with st.form("insert_ticket"):
+        key = st.text_input("Ticket key")
+        summary = st.text_input("Summary")
+        description = st.text_area("Description")
+        resolution = st.text_area("Resolution")
+        if st.form_submit_button("Insert ticket"):
+            if not key.strip() or not summary.strip():
+                st.error("Ticket key and summary are required.")
+            elif api("POST", "/api/jira/issues", json=dict(external_key=key.strip(),
+                      summary=summary.strip(), description=description, resolution=resolution)):
+                st.success("Ticket saved.")
+    tickets = api("GET", "/api/jira/issues") or []
+    if tickets:
+        selected = st.selectbox("Ticket to delete", tickets,
+                                format_func=lambda t: f"{t['external_key']}: {t['summary']}")
+        confirm = st.checkbox("Delete this ticket from the curator database")
+        st.caption("This does not delete the original Jira issue. Tickets linked to published knowledge are retained.")
+        if st.button("Delete ticket", disabled=not confirm):
+            if api("DELETE", f"/api/jira/issues/{selected['id']}"):
+                st.rerun()

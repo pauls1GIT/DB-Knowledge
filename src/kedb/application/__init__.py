@@ -1,2 +1,2 @@
 
-from .csv_incidents import CsvIncident, incident_from_row, extract_error_code
+from .incidents import Incident, incident_from_row, extract_error_code

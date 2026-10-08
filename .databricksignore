@@ -9,3 +9,7 @@ __pycache__/
 *.sqlite3
 dist/
 build/
+
+.langgraph_api/
+.chroma/
+*.egg-info/

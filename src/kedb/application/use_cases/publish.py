@@ -1,7 +1,7 @@
 import hashlib
 import json
 import unicodedata
-from uuid import UUID, uuid4
+from uuid import UUID, uuid4, uuid5
 from kedb.domain import KnownError, HumanReview, ReviewDecision, create_new_version, ArticleChunk
 from kedb.application.dto import KnowledgeProposal
 
@@ -59,7 +59,9 @@ def semantic_chunks(article):
     if not article.can_embed:
         raise ValueError('Only approved/published articles may be chunked for production search')
     data=[('problem', f'{article.title}\n{article.problem}'),('root_cause',article.root_cause),('solution',article.solution)]
-    return [ArticleChunk(known_error_id=article.known_error_id, article_version_id=article.id, chunk_index=i, section=s, content=c) for i,(s,c) in enumerate(data)]
+    return [ArticleChunk(id=uuid5(article.id, section), known_error_id=article.known_error_id,
+                         article_version_id=article.id, chunk_index=i, section=section, content=content)
+            for i, (section, content) in enumerate(data) if content.strip()]
 
 
 def content_fingerprint(problem, root_cause, solution):

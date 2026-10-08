@@ -57,7 +57,7 @@ def _workflow():
 
 def test_graph_has_visible_retrieval_fanout_and_review_loop():
     node_ids = {node_id for node_id, _label, _kind in GRAPH_NODES}
-    assert {"exact_search", "full_text_search", "vector_search", "human_review"} <= node_ids
+    assert {"full_text_search", "vector_search", "human_review"} <= node_ids
     assert ("human_review", "return_for_ai_revision", "Modify") in GRAPH_EDGES
     assert ("return_for_ai_revision", "human_review", None) in GRAPH_EDGES
     assert "Vector Search" in workflow_dot()
@@ -68,6 +68,6 @@ def test_compiled_graph_exposes_expected_nodes():
     pytest.importorskip("langgraph")
     graph = build_langgraph(_workflow())
     rendered = graph.get_graph()
-    assert "exact_search" in rendered.nodes
+    assert "exact_search" not in rendered.nodes
     assert "human_review" in rendered.nodes
     assert "publish_approved_knowledge" in rendered.nodes

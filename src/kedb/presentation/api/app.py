@@ -1,26 +1,28 @@
 from __future__ import annotations
 
 import os
-import csv
+import json
+import httpx
 import hashlib
-import io
 from pathlib import Path
 from contextlib import asynccontextmanager
 from uuid import UUID, NAMESPACE_URL, uuid5
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
-from sqlalchemy import select
+from typing import Literal
+from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 
 from kedb.application.workflows.curator import CuratorWorkflow
-from kedb.infrastructure.lakebase.models import WorkflowCheckpointRow, CsvBatchRow
-from kedb.application.csv_incidents import incident_from_row, resolve_csv_path, REQUIRED_COLUMNS
+from kedb.infrastructure.lakebase.models import WorkflowCheckpointRow, CsvBatchRow, PublicationOutboxRow
+from kedb.application.incidents import incidents_from_json, batch_items
+from kedb.infrastructure.jira import fetch_incidents
 from kedb.application.workflows.batch import BatchWorker
 
 from kedb.application.dto import KnowledgeProposal
 from kedb.application.retrieval import RetrievalCoordinator
-from kedb.application.use_cases import PublishApprovedKnowledge
+from kedb.application.use_cases import PublishApprovedKnowledge, GenerateGroundedAnswer
 from kedb.config import Settings
 from kedb.domain import HumanReview, JiraIssue, ReviewDecision
 from kedb.infrastructure.lakebase import Database, SqlRepositories
@@ -29,11 +31,12 @@ from kedb.infrastructure.search.in_memory import InMemorySearch
 settings = Settings()
 db = Database(settings.kedb_database_url)
 startup_error: str | None = None
+materializer = None
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    global startup_error
+    global startup_error, materializer
     try:
         db.create_all()
         db.ping()
@@ -44,9 +47,21 @@ async def lifespan(_app: FastAPI):
     worker = BatchWorker(db, process_batch_item) if startup_error is None else None
     if worker:
         worker.start()
+    chunk_worker = None
+    materializer = None
+    if startup_error is None and settings.databricks_warehouse_id:
+        from kedb.application.use_cases.materialize import MaterializePublications, MaterializationWorker
+        from kedb.infrastructure.delta.sql_chunks import SqlChunkSink
+        materializer = MaterializePublications(db, SqlChunkSink(
+            warehouse_id=settings.databricks_warehouse_id, table=settings.kedb_uc_chunk_table,
+            index_name=settings.databricks_ai_search_index))
+        chunk_worker = MaterializationWorker(materializer)
+        chunk_worker.start()
     try:
         yield
     finally:
+        if chunk_worker:
+            chunk_worker.stop()
         if worker:
             worker.stop()
 
@@ -58,12 +73,22 @@ class JiraIn(BaseModel):
     external_key: str
     summary: str
     description: str
-    resolution: str
+    resolution: str = ""
     error_code: str | None = None
 
 
 class SearchIn(BaseModel):
     query: str
+
+class ResolveTicketIn(BaseModel):
+    summary: str
+    description: str
+
+
+class GroundedQuestionIn(BaseModel):
+    question: str
+    evidence: list[dict]
+    history: list[dict] = []
 
 
 class ReviewIn(BaseModel):
@@ -108,6 +133,7 @@ def make_search_adapter():
                             "known_error_id": ke.id,
                             "article_version_id": version.id,
                             "title": version.title,
+                            "resolution": version.solution,
                             "content": " ".join(
                                 [version.problem, version.root_cause, version.solution]
                             ),
@@ -131,7 +157,25 @@ def health():
 
 @app.get("/api/system/status")
 def system_status():
-    return health()
+    result = health()
+    pending = None
+    if startup_error is None:
+        with db.sessions() as session:
+            pending = session.scalar(select(func.count()).select_from(PublicationOutboxRow).where(
+                PublicationOutboxRow.processed.is_(False)))
+    result["article_chunks"] = {
+        "table": settings.kedb_uc_chunk_table,
+        "warehouse_configured": bool(settings.databricks_warehouse_id),
+        "worker_running": materializer is not None,
+        "pending_publications": pending,
+        "last_error": materializer.last_error if materializer else (
+            f"Database startup failed: {startup_error}" if startup_error else None
+        ),
+        "configuration_required": None if settings.databricks_warehouse_id else (
+            "Set DATABRICKS_WAREHOUSE_ID to enable chunk materialization"
+        ),
+    }
+    return result
 
 
 @app.post("/api/jira/issues")
@@ -193,6 +237,48 @@ def search(body: SearchIn):
     retriever = RetrievalCoordinator(make_search_adapter())
     return [candidate.__dict__ for candidate in retriever.search(body.query, settings.kedb_search_top_k)]
 
+@app.post("/api/tickets/resolve")
+def resolve_ticket(body: ResolveTicketIn):
+    query = f"{body.summary}\n{body.description}"
+
+    retriever = RetrievalCoordinator(make_search_adapter())
+    candidates = retriever.search(query, settings.kedb_search_top_k)
+    # AI Search indexes chunks; load the complete published resolution from Lakebase.
+    results = []
+    with db.sessions() as session:
+        repo = SqlRepositories(session)
+        for candidate in candidates:
+            result = dict(candidate.__dict__)
+            if not result["resolution"]:
+                version = repo.get_version(candidate.article_version_id)
+                if version and version.status.value == "PUBLISHED":
+                    result["resolution"] = version.solution
+            results.append(result)
+
+    return {"query": query, "candidates": results}
+
+@app.post("/api/tickets/grounded-answer")
+def grounded_answer(body: GroundedQuestionIn):
+    if not body.question.strip():
+        raise HTTPException(400, "Question is required.")
+
+    evidence = [
+        {
+            "title": item["title"],
+            "content": item.get("resolution", ""),
+            "known_error_id": item.get("known_error_id"),
+            "article_version_id": item.get("article_version_id"),
+        }
+        for item in body.evidence
+        if item.get("resolution")
+    ]
+
+    if not evidence:
+        raise HTTPException(400, "No KEDB resolution evidence was provided.")
+
+    generator = GenerateGroundedAnswer(make_llm())
+    return generator.execute(body.question, evidence, body.history)
+
 
 @app.post("/api/publications")
 def publish(body: PublishIn):
@@ -222,18 +308,26 @@ def publish(body: PublishIn):
 
 
 def make_llm():
-    from kedb.infrastructure.llm.databricks_model import DatabricksModelServingProvider
+    if settings.databricks_model_endpoint:
+        from kedb.infrastructure.llm.databricks_model import DatabricksModelServingProvider
 
-    if not settings.databricks_model_endpoint:
-        raise HTTPException(503, "Set DATABRICKS_MODEL_ENDPOINT to run the AI curator.")
-    host, token = settings.databricks_host, settings.databricks_token
-    if not host or not token:
-        from databricks.sdk import WorkspaceClient
-        workspace = WorkspaceClient()
-        host = workspace.config.host
-        token = workspace.config.authenticate()["Authorization"].removeprefix("Bearer ")
-    return DatabricksModelServingProvider(
-        base_url=host, token=token, model=settings.databricks_model_endpoint)
+        host, token = settings.databricks_host, settings.databricks_token
+        if not host or not token:
+            from databricks.sdk import WorkspaceClient
+
+            workspace = WorkspaceClient()
+            host = workspace.config.host
+            token = workspace.config.authenticate()["Authorization"].removeprefix("Bearer ")
+
+        return DatabricksModelServingProvider(
+            base_url=host,
+            token=token,
+            model=settings.databricks_model_endpoint,
+        )
+
+    from kedb.infrastructure.llm.ollama_model import OllamaModelProvider
+
+    return OllamaModelProvider()
 
 
 def workflow_for(session):
@@ -323,8 +417,13 @@ def review_workflow(workflow_id: UUID, body: ReviewIn):
     return state
 
 
-CSV_LOCAL_PATH = Path(r"D:\Python\Generate_dataset\tickets_clean.csv")
-CSV_BUNDLED_PATH = Path(__file__).resolve().parents[4] / "data" / "tickets_clean.csv"
+JSON_BUNDLED_PATH = Path(__file__).resolve().parents[4] / "data" / "tickets_clean.json"
+
+
+class BatchInput(BaseModel):
+    source: Literal["json", "jira"] = "json"
+    tickets: list[dict] | None = None
+    jql: str | None = None
 
 
 def process_batch_item(item):
@@ -333,34 +432,38 @@ def process_batch_item(item):
 
 
 @app.post("/api/batches/play")
-def play_batch():
+def play_batch(body: BatchInput | None = None):
     require_database()
-    path = resolve_csv_path(CSV_LOCAL_PATH, CSV_BUNDLED_PATH)
+    body = body or BatchInput()
     try:
-        content = path.read_bytes()
-        reader = csv.DictReader(io.StringIO(content.decode("utf-8-sig")))
-        missing = (REQUIRED_COLUMNS | {"resolution"}).difference(reader.fieldnames or [])
-        if missing:
-            raise ValueError(f"CSV is missing required columns: {', '.join(sorted(missing))}")
-        items, seen = [], set()
-        for row in reader:
-            incident = incident_from_row(row)
-            if not incident.is_resolved or incident.external_key in seen:
-                continue
-            if not incident.external_key:
-                raise ValueError("CSV contains a resolved ticket without a ticket_id")
-            seen.add(incident.external_key)
-            items.append({key: getattr(incident, key) for key in
-                          ("external_key", "summary", "description", "resolution", "error_code")})
-    except (OSError, ValueError) as exc:
-        raise HTTPException(400, f"Cannot read server CSV {path}: {exc}") from exc
+        if body.source == "jira":
+            if body.tickets is not None:
+                raise ValueError("tickets cannot be combined with Jira input")
+            items = batch_items(fetch_incidents(settings, body.jql))
+            source = f"Jira: {body.jql or settings.jira_jql}"
+            identity = settings.jira_base_url + source
+        else:
+            if body.jql is not None:
+                raise ValueError("jql requires Jira input")
+            path = Path(settings.kedb_json_path) if settings.kedb_json_path else JSON_BUNDLED_PATH
+            payload = body.tickets if body.tickets is not None else json.loads(path.read_text(encoding="utf-8-sig"))
+            items = batch_items(incidents_from_json(payload))
+            source = "JSON upload" if body.tickets is not None else str(path)
+            identity = source
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(502, f"Jira API returned HTTP {exc.response.status_code}") from exc
+    except httpx.RequestError as exc:
+        raise HTTPException(502, "Cannot connect to Jira API") from exc
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise HTTPException(400, f"Cannot load input: {exc}") from exc
+    content = json.dumps([identity, items], sort_keys=True, ensure_ascii=False).encode()
     batch_id = hashlib.sha256(content).hexdigest()
     with db.sessions.begin() as session:
         batch = session.get(CsvBatchRow, batch_id)
         if batch is None:
             try:
                 with session.begin_nested():
-                    session.add(CsvBatchRow(id=batch_id, source=str(path), items=items,
+                    session.add(CsvBatchRow(id=batch_id, source=source, items=items,
                         position=0, results=[], status="RUNNING" if items else "COMPLETE"))
                     session.flush()
             except IntegrityError:
@@ -380,7 +483,7 @@ def batch_status(batch_id):
         results = [dict(result) for result in batch.results]
         ids = {result["workflow_id"] for result in results}
         statuses = {}
-        # Bound SQL parameter counts for large CSVs.
+        # Bound SQL parameter counts for large batches.
         ids = list(ids)
         for offset in range(0, len(ids), 500):
             statuses.update(dict(session.execute(select(
@@ -408,6 +511,19 @@ def get_batch(batch_id: str):
     return batch_status(batch_id)
 
 
+@app.post("/api/batches/{batch_id}/resume")
+def resume_batch(batch_id: str):
+    require_database()
+    with db.sessions.begin() as session:
+        batch = session.get(CsvBatchRow, batch_id)
+        if batch is None:
+            raise HTTPException(404, "Batch not found")
+        if batch.position < len(batch.items):
+            batch.status = "RUNNING"
+            batch.error = None
+    return {"batch_id": batch_id}
+
+
 @app.post("/api/batches/{batch_id}/pause")
 def pause_batch(batch_id: str):
     require_database()
@@ -428,3 +544,69 @@ def get_workflow(workflow_id: UUID):
         if row is None:
             raise HTTPException(404, "Workflow not found")
         return row.state
+
+
+@app.get("/api/jira/issues")
+def list_issues():
+    require_database()
+    from kedb.infrastructure.lakebase.models import JiraIssueRow
+    with db.sessions() as session:
+        return [{"id": row.id, "external_key": row.external_key, "summary": row.summary}
+                for row in session.scalars(select(JiraIssueRow).order_by(JiraIssueRow.created_at.desc()))]
+
+
+@app.delete("/api/jira/issues/{issue_id}")
+def delete_issue(issue_id: UUID):
+    require_database()
+    from kedb.infrastructure.lakebase.models import JiraIssueRow, ArticleVersionRow
+    with db.sessions.begin() as session:
+        row = session.get(JiraIssueRow, str(issue_id))
+        if row is None:
+            raise HTTPException(404, "Issue not found")
+        if session.scalar(select(ArticleVersionRow.id).where(ArticleVersionRow.source_jira_issue_id == str(issue_id)).limit(1)):
+            raise HTTPException(409, "Ticket is linked to published knowledge and cannot be deleted")
+        session.delete(row)
+    return {"deleted": str(issue_id)}
+
+
+@app.post("/api/jira/webhook")
+def jira_created(body: dict, x_jira_webhook_token: str = Header(default="")):
+    import secrets
+    from kedb.infrastructure.jira import jira_text
+    from kedb.infrastructure.notifications import send_candidates
+    if not settings.jira_webhook_token:
+        raise HTTPException(503, "Configure JIRA_WEBHOOK_TOKEN")
+    if not secrets.compare_digest(x_jira_webhook_token, settings.jira_webhook_token):
+        raise HTTPException(401, "Invalid webhook token")
+    if body.get("webhookEvent") == "kedb:smtp_diagnostic":
+        from kedb.infrastructure.notifications import diagnose_smtp
+        return diagnose_smtp(settings)
+    if body.get("webhookEvent") != "jira:issue_created":
+        return {"status": "ignored"}
+    raw = body.get("issue") or {}
+    fields = raw.get("fields") or {}
+    if not raw.get("key") or not fields.get("summary"):
+        raise HTTPException(422, "Issue key and summary are required")
+    recipient = (fields.get("reporter") or {}).get("emailAddress")
+    if settings.kedb_email_delivery == "smtp" and not recipient:
+        raise HTTPException(422, "Reporter emailAddress is required in the webhook payload")
+    issue = create_issue(JiraIn(external_key=raw["key"], summary=fields["summary"],
+                               description=jira_text(fields.get("description"))))
+    candidates = RetrievalCoordinator(make_search_adapter()).search(
+        fields["summary"] + " " + jira_text(fields.get("description")), top_k=3)
+    if settings.kedb_email_delivery == "jira":
+        from kedb.infrastructure.notifications import candidate_email
+        return {**candidate_email(raw["key"], fields["summary"], candidates), "issue_id": issue["id"]}
+    from kedb.infrastructure.lakebase.models import JiraNotificationRow
+    try:
+        with db.sessions.begin() as session:
+            if session.get(JiraNotificationRow, raw["key"]):
+                return {"status": "already_sent", "issue_id": issue["id"]}
+            session.add(JiraNotificationRow(external_key=raw["key"]))
+            session.flush()
+            send_candidates(settings, JiraIssue(**issue), recipient, candidates)
+    except IntegrityError:
+        return {"status": "already_sent", "issue_id": issue["id"]}
+    except (ValueError, OSError) as exc:
+        raise HTTPException(503, "Candidate email could not be sent; check SMTP configuration and retry") from exc
+    return {"status": "sent", "candidate_count": len(candidates), "issue_id": issue["id"]}

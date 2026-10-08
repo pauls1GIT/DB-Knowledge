@@ -22,6 +22,7 @@ def test_play_keeps_background_running_and_advances_reviews(tmp_path, monkeypatc
     def request(method, url, **kwargs):
         nonlocal started
         calls.append((method, url))
+        if url.endswith("/jira/issues"): return Response([])
         if url.endswith("/status"): return Response({"status": "ok"})
         if url.endswith("/play"):
             started = True

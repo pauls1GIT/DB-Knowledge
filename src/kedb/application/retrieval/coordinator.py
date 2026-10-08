@@ -51,19 +51,14 @@ class RetrievalCoordinator:
         return [replace(c, rank=i + 1) for i, c in enumerate(rescored[:top_k])]
 
     def search(self, query: str, top_k: int = 5) -> list[RetrievalCandidate]:
-        ids = self.identifiers(query)
-        try:
-            rows = self.search_port.search(
-                query,
-                ids,
-                top_k=max(top_k * 2, 10),
-                query_type="HYBRID",
-            )
-        except TypeError:
-            rows = self.search_port.search(query, ids, top_k=max(top_k * 2, 10))
-        rescored = []
-        for candidate in rows:
-            score = candidate.search_score + (self.exact_boost * candidate.exact_score)
-            rescored.append(replace(candidate, final_score=score))
-        rescored.sort(key=lambda x: x.final_score, reverse=True)
-        return [replace(candidate, rank=i + 1) for i, candidate in enumerate(rescored[:top_k])]
+        merged = {}
+        for channel, rows in (("lexical_score", self.full_text_search(query, top_k)),
+                              ("vector_score", self.vector_search(query, top_k))):
+            for candidate in rows:
+                key = (candidate.known_error_id, candidate.article_version_id)
+                current = merged.setdefault(key, replace(candidate, lexical_score=0, vector_score=0))
+                merged[key] = replace(current, **{channel: max(getattr(current, channel), candidate.final_score)})
+        rescored = [replace(c, final_score=0.5 * c.lexical_score + 0.5 * c.vector_score)
+                    for c in merged.values()]
+        rescored.sort(key=lambda c: c.final_score, reverse=True)
+        return [replace(c, rank=i + 1) for i, c in enumerate(rescored[:top_k])]

@@ -1,4 +1,4 @@
-"""Persistent CSV progress with one background worker per API process."""
+"""Persistent incident progress with one background worker per API process."""
 from __future__ import annotations
 
 import logging
@@ -16,7 +16,7 @@ class BatchWorker:
         self.database = database
         self.process = process
         self.stopping = Event()
-        self.thread = Thread(target=self.run, name="csv-curator", daemon=True)
+        self.thread = Thread(target=self.run, name="incident-curator", daemon=True)
 
     def start(self):
         self.thread.start()
@@ -31,7 +31,7 @@ class BatchWorker:
                 if self.process_next():
                     continue
             except Exception:
-                logger.exception("Background CSV worker failed; will retry")
+                logger.exception("Background incident worker failed; will retry")
             self.stopping.wait(1)
 
     def process_next(self):
@@ -47,7 +47,7 @@ class BatchWorker:
         try:
             state = self.process(item)
         except Exception as exc:
-            logger.exception("CSV ticket processing failed")
+            logger.exception("incident ticket processing failed")
             with self.database.sessions.begin() as session:
                 batch = session.get(CsvBatchRow, batch_id)
                 batch.status = "ERROR"

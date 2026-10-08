@@ -36,10 +36,10 @@ def workflow(scores=None, publisher=None):
     return CuratorWorkflow(llm, search, publisher=publisher)
 
 
-@pytest.mark.parametrize("channel", ["exact", "lexical", "vector"])
+@pytest.mark.parametrize("channel", ["lexical", "vector"])
 def test_any_high_search_rejects_without_publication(channel):
-    scores = dict(exact=.1, lexical=.1, vector=.1)
-    scores[channel] = .80001
+    scores = dict(exact=1, lexical=.70, vector=.70)
+    scores[channel] = .70001
     wf = workflow(scores, publisher=lambda _: pytest.fail("Must not publish"))
     state = wf.start({"summary": "timeout"})
     assert state["status"] == "REJECTED"
@@ -48,7 +48,7 @@ def test_any_high_search_rejects_without_publication(channel):
     assert compiled["status"] == "REJECTED"
 
 
-@pytest.mark.parametrize("score", [0, .19999])
+@pytest.mark.parametrize("score", [0, .34999])
 def test_low_score_creates_and_publishes_without_human_review(score):
     published = []
     wf = workflow(dict(exact=score, lexical=score, vector=score),
@@ -59,7 +59,7 @@ def test_low_score_creates_and_publishes_without_human_review(score):
     assert published[0]["target_known_error_id"] is None
 
 
-@pytest.mark.parametrize("score", [.2, .8])
+@pytest.mark.parametrize("score", [.35, .70])
 def test_boundary_scores_require_review(score):
     state = workflow(dict(exact=score, lexical=score, vector=score)).start({"summary": "timeout"})
     assert state["status"] == "WAITING_FOR_REVIEW"
@@ -88,3 +88,15 @@ def test_graph_modify_loops_and_reject_terminates():
     state = graph.invoke(Command(resume={"decision": "REJECT"}), config)
     assert state["status"] == "REJECTED"
     assert "publication_result" not in state
+
+
+def test_exact_score_does_not_affect_formula_or_decision():
+    state = workflow(dict(exact=1, lexical=.4, vector=.6)).start({"summary": "timeout"})
+    assert state["candidates"][0]["final_score"] == .5
+    assert state["status"] == "WAITING_FOR_REVIEW"
+
+
+def test_single_high_channel_does_not_override_combined_score():
+    state = workflow(dict(exact=1, lexical=.9, vector=.1)).start({"summary": "timeout"})
+    assert state["candidates"][0]["final_score"] == .5
+    assert state["status"] == "WAITING_FOR_REVIEW"

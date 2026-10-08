@@ -31,7 +31,6 @@ class CuratorState(TypedDict, total=False):
 GRAPH_NODES: list[tuple[str, str, str]] = [
     ("retrieve_jira_fields", "Retrieve Jira Fields", "process"),
     ("extract_structured_error_information", "Extract Structured Error Information", "ai"),
-    ("exact_search", "Exact Search", "retrieval"),
     ("full_text_search", "Full Text Search", "retrieval"),
     ("vector_search", "Vector Search", "retrieval"),
     ("combine_candidates", "Combine Candidates", "process"),
@@ -56,10 +55,8 @@ GRAPH_NODES: list[tuple[str, str, str]] = [
 GRAPH_EDGES: list[tuple[str, str, str | None]] = [
     ("__start__", "retrieve_jira_fields", None),
     ("retrieve_jira_fields", "extract_structured_error_information", None),
-    ("extract_structured_error_information", "exact_search", None),
     ("extract_structured_error_information", "full_text_search", None),
     ("extract_structured_error_information", "vector_search", None),
-    ("exact_search", "combine_candidates", None),
     ("full_text_search", "combine_candidates", None),
     ("vector_search", "combine_candidates", None),
     ("combine_candidates", "rerank_candidates", None),
@@ -164,7 +161,6 @@ class CuratorWorkflow:
             self.extract_structured_error_information,
         ):
             state.update(node(state))
-        state.update(self.exact_search(state))
         state.update(self.full_text_search(state))
         state.update(self.vector_search(state))
         state.update(self.combine_candidates(state))
@@ -258,7 +254,6 @@ class CuratorWorkflow:
     def combine_candidates(self, state: CuratorState) -> dict:
         merged: dict[tuple[str | None, str | None], dict] = {}
         for channel, key in (
-            ("exact", "exact_candidates"),
             ("lexical", "lexical_candidates"),
             ("vector", "vector_candidates"),
         ):
@@ -283,29 +278,21 @@ class CuratorWorkflow:
             lexical = float(candidate.get("lexical_score", 0.0))
             vector = float(candidate.get("vector_score", 0.0))
             search = float(candidate.get("search_score", 0.0))
-            candidate["final_score"] = max(search, 0.45 * exact + 0.20 * lexical + 0.35 * vector)
+            candidate["final_score"] = 0.50 * lexical + 0.50 * vector
         candidates.sort(key=lambda c: c.get("final_score", 0.0), reverse=True)
         for rank, candidate in enumerate(candidates, start=1):
             candidate["rank"] = rank
         return {"candidates": candidates}
 
     def suitable_known_error_found(self, state: CuratorState) -> dict:
-        # Inspect every raw search result before relying on the combined ranking.
-        high_match = any(
-            max(float(c.get(field) or 0) for field in
-                ("final_score", "search_score", channel + "_score")) > 0.8
-            for channel, key in (("exact", "exact_candidates"),
-                                 ("lexical", "lexical_candidates"),
-                                 ("vector", "vector_candidates"))
-            for c in state.get(key, [])
-        )
         final_score = max((c.get("final_score", 0) for c in state.get("candidates", [])), default=0)
-        if high_match or final_score < 0.2:
+        high_match = final_score > 0.70
+        if high_match or final_score < 0.35:
             return {
                 "evaluation": {
                     "recommendation": "USE_EXISTING" if high_match else "CREATE_NEW",
                     "confidence": 1.0,
-                    "reasoning": "A search score exceeds 0.8" if high_match else "Final score is below 0.2",
+                    "reasoning": "Combined score exceeds 0.70" if high_match else "Combined score is below 0.35",
                     "final_score": final_score,
                 },
                 "automatic_create": not high_match,
@@ -479,12 +466,11 @@ def build_langgraph(workflow: CuratorWorkflow, *, checkpointer=None):
     graph.add_edge("retrieve_jira_fields", "extract_structured_error_information")
 
     # Fan-out hybrid retrieval.
-    graph.add_edge("extract_structured_error_information", "exact_search")
     graph.add_edge("extract_structured_error_information", "full_text_search")
     graph.add_edge("extract_structured_error_information", "vector_search")
 
-    # Barrier: combine only after all three retrieval branches have completed.
-    graph.add_edge(["exact_search", "full_text_search", "vector_search"], "combine_candidates")
+    # Barrier: combine only after both retrieval branches have completed.
+    graph.add_edge(["full_text_search", "vector_search"], "combine_candidates")
     graph.add_edge("combine_candidates", "rerank_candidates")
     graph.add_edge("rerank_candidates", "suitable_known_error_found")
 

@@ -102,3 +102,9 @@ class CsvBatchRow(Base):
     results: Mapped[list] = mapped_column(JSON, default=list)
     error: Mapped[str|None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class JiraNotificationRow(Base):
+    __tablename__ = "jira_notification"
+    external_key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

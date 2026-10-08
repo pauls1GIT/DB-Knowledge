@@ -25,13 +25,14 @@ class InMemorySearch:
             elif query_type == "ANN":
                 score = vector
             else:
-                score = 0.55 * vector + 0.30 * lexical + 0.15 * exact
+                score = 0.50 * vector + 0.50 * lexical
             if score > 0 or exact > 0:
                 output.append(
                     RetrievalCandidate(
                         known_error_id=doc["known_error_id"],
                         article_version_id=doc["article_version_id"],
                         title=doc["title"],
+                        resolution=doc.get("resolution", ""),
                         exact_score=exact,
                         lexical_score=lexical,
                         vector_score=vector,

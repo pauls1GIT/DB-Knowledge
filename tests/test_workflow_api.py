@@ -69,11 +69,15 @@ def test_batch_play_returns_immediately_and_restores_saved_queue(tmp_path, monke
     from kedb.infrastructure.lakebase.models import CsvBatchRow
     db = Database(f"sqlite+pysqlite:///{tmp_path / 'batch_api.db'}")
     monkeypatch.setattr(api_module, "db", db)
-    csv = tmp_path / "tickets.csv"
-    csv.write_text("ticket_id,subject,description,resolution,status\n"
-                   "T-1,One,Issue,Fix,Resolved\nT-2,Two,Issue,Fix,Closed\n"
-                   "T-1,Duplicate,Issue,Fix,Resolved\nT-3,Open,Issue,,Open\n")
-    monkeypatch.setattr(api_module, "CSV_LOCAL_PATH", csv)
+    import json
+    dataset = tmp_path / "tickets.json"
+    dataset.write_text(json.dumps([
+        {"ticket_id": key, "subject": title, "description": "Issue", "resolution": fix, "status": status}
+        for key, title, fix, status in [("T-1", "One", "Fix", "Resolved"),
+            ("T-2", "Two", "Fix", "Closed"), ("T-1", "Duplicate", "Fix", "Resolved"),
+            ("T-3", "Open", "", "Open")]
+    ]))
+    monkeypatch.setattr(api_module.settings, "kedb_json_path", str(dataset))
     # Control worker steps explicitly to prove Play does not invoke the model inline.
     monkeypatch.setattr(BatchWorker, "start", lambda self: None)
     monkeypatch.setattr(BatchWorker, "stop", lambda self: None)

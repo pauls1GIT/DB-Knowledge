@@ -21,3 +21,35 @@ env:
     value: "kedb_dev.knowledge.article_chunks_index"
   - name: DATABRICKS_MODEL_ENDPOINT
     value: "databricks-meta-llama-3-3-70b-instruct"
+
+  # Attach the SQL warehouse as an app resource named sql-warehouse (CAN_USE).
+  - name: DATABRICKS_WAREHOUSE_ID
+    valueFrom: sql-warehouse
+  - name: KEDB_UC_CHUNK_TABLE
+    value: "kedb_dev.knowledge.article_chunks"
+
+  # Jira Cloud; token is supplied by the attached secret resource.
+  - name: JIRA_BASE_URL
+    value: "https://dbcurator.atlassian.net"
+  - name: JIRA_EMAIL
+    value: "paulsavu99@gmail.com"
+  - name: JIRA_API_TOKEN
+    valueFrom: jira-api-token
+
+  # Gmail SMTP. Attach a secret resource named smtp-password before deployment.
+  - name: SMTP_HOST
+    value: "smtp.gmail.com"
+  - name: SMTP_PORT
+    value: "587"
+  - name: SMTP_STARTTLS
+    value: "true"
+  - name: SMTP_USERNAME
+    value: "paulsavu99@gmail.com"
+  - name: SMTP_FROM
+    value: "paulsavu99@gmail.com"
+  - name: SMTP_PASSWORD
+    valueFrom: smtp-password
+
+  # Attach a READ secret resource named jira-webhook-token.
+  - name: JIRA_WEBHOOK_TOKEN
+    valueFrom: jira-webhook-token
