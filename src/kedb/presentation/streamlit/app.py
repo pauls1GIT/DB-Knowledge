@@ -153,6 +153,11 @@ def render_resolve_ticket() -> None:
         "Describe an incident and generate an answer grounded in approved KEDB knowledge."
     )
 
+    if st.button("➕ New Chat", key="new_resolve_chat"):
+        st.session_state.resolve_messages = []
+        st.session_state.pop("resolve_candidates", None)
+        st.rerun()
+
     if "resolve_messages" not in st.session_state:
         st.session_state.resolve_messages = []
 
@@ -169,7 +174,12 @@ def render_resolve_ticket() -> None:
             "role": "user",
             "content": user_message,
         })
-        candidates = st.session_state.get("resolve_candidates", [])
+        previous_user_messages = [
+            message["content"]
+            for message in st.session_state.resolve_messages[:-1]
+            if message["role"] == "user"
+        ]
+        candidates = []
 
         if not candidates:
             result = api(
@@ -177,7 +187,7 @@ def render_resolve_ticket() -> None:
                 "/api/tickets/resolve",
                 json={
                     "summary": user_message,
-                    "description": "",
+                    "description": "\n".join(previous_user_messages[-3:]),
                 },
             )
             st.session_state["resolve_candidates"] = (result or {}).get("candidates", [])
