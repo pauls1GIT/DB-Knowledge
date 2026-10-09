@@ -157,6 +157,7 @@ def render_resolve_ticket() -> None:
         st.session_state.resolve_messages = []
         st.session_state.pop("resolve_candidates", None)
         st.rerun()
+        
 
     if "resolve_messages" not in st.session_state:
         st.session_state.resolve_messages = []
