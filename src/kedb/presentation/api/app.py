@@ -257,6 +257,7 @@ def resolve_ticket(body: ResolveTicketIn):
 
     return {"query": query, "candidates": results}
 
+
 @app.post("/api/tickets/grounded-answer")
 def grounded_answer(body: GroundedQuestionIn):
     if not body.question.strip():
@@ -272,9 +273,6 @@ def grounded_answer(body: GroundedQuestionIn):
         for item in body.evidence
         if item.get("resolution")
     ]
-
-    if not evidence:
-        raise HTTPException(400, "No KEDB resolution evidence was provided.")
 
     generator = GenerateGroundedAnswer(make_llm())
     return generator.execute(body.question, evidence, body.history)

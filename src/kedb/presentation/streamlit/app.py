@@ -157,7 +157,6 @@ def render_resolve_ticket() -> None:
         st.session_state.resolve_messages = []
         st.session_state.pop("resolve_candidates", None)
         st.rerun()
-        
 
     if "resolve_messages" not in st.session_state:
         st.session_state.resolve_messages = []
@@ -175,49 +174,44 @@ def render_resolve_ticket() -> None:
             "role": "user",
             "content": user_message,
         })
-        previous_user_messages = [
-            message["content"]
-            for message in st.session_state.resolve_messages[:-1]
-            if message["role"] == "user"
-        ]
-        candidates = []
 
-        if not candidates:
-            result = api(
-                "POST",
-                "/api/tickets/resolve",
-                json={
-                    "summary": user_message,
-                    "description": "\n".join(previous_user_messages[-3:]),
-                },
-            )
-            st.session_state["resolve_candidates"] = (result or {}).get("candidates", [])
-            candidates = st.session_state["resolve_candidates"]
+        # Search KEDB using ONLY the latest user message.
+        result = api(
+            "POST",
+            "/api/tickets/resolve",
+            json={
+                "summary": user_message,
+                "description": "",
+            },
+        )
 
-        if candidates:
-            answer = api(
-                "POST",
-                "/api/tickets/grounded-answer",
-                json={
-                    "question": user_message,
-                    "evidence": candidates,
-                    "history": st.session_state.resolve_messages[:-1],
-                },
-            )
-            if answer:
-                st.session_state.resolve_messages.append({
-                    "role": "assistant",
-                    "content": answer["answer"],
-                })
-                st.rerun()
+        candidates = (result or {}).get("candidates", [])
+        st.session_state["resolve_candidates"] = candidates
+
+        
+        # Always call the LLM, even when retrieval returns no articles.
+        answer = api(
+            "POST",
+            "/api/tickets/grounded-answer",
+            json={
+                "question": user_message,
+                "evidence": candidates,
+                "history": st.session_state.resolve_messages[:-1],
+            },
+        )
+
+        if answer:
+            st.session_state.resolve_messages.append({
+                "role": "assistant",
+                "content": answer["answer"],
+            })
         else:
             st.session_state.resolve_messages.append({
                 "role": "assistant",
-                "content": "I couldn't find relevant approved KEDB knowledge for this incident.",
+                "content": "Sorry, I couldn't generate a response right now.",
             })
-            st.rerun()
 
-
+        st.rerun()
 
 def render_search_kedb() -> None:
     st.subheader("Search KEDB")
