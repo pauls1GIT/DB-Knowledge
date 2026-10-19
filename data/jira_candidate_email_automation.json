@@ -1,0 +1,123 @@
+{
+  "cloud": true,
+  "rules": [
+    {
+      "name": "Email similar known errors",
+      "state": "DISABLED",
+      "description": "Replace both credential placeholders before enabling. Scope: PROBLEM and MFLP.",
+      "authorAccountId": "5ea5515e06a3eb0b7ebfc566",
+      "actor": {
+        "type": "ACCOUNT_ID",
+        "value": "5ea5515e06a3eb0b7ebfc566"
+      },
+      "canOtherRuleTrigger": false,
+      "notifyOnError": "FIRSTERROR",
+      "writeAccessType": "OWNER_ONLY",
+      "collaborators": [],
+      "labels": [],
+      "projects": [
+        {
+          "projectId": "10001",
+          "projectTypeKey": "software"
+        },
+        {
+          "projectId": "10034",
+          "projectTypeKey": "software"
+        }
+      ],
+      "ruleScope": {
+        "resources": [
+          "ari:cloud:jira:dc56b608-6eb5-4fe6-89b8-b25649b45335:project/10001",
+          "ari:cloud:jira:dc56b608-6eb5-4fe6-89b8-b25649b45335:project/10034"
+        ]
+      },
+      "trigger": {
+        "component": "TRIGGER",
+        "schemaVersion": 1,
+        "type": "jira.issue.event.trigger:created",
+        "value": {
+          "eventKey": "jira:issue_created",
+          "issueEvent": "issue_created",
+          "eventTypes": []
+        },
+        "children": [],
+        "conditions": []
+      },
+      "components": [
+        {
+          "component": "ACTION",
+          "schemaVersion": 1,
+          "type": "jira.issue.outgoing.webhook",
+          "value": {
+            "url": "https://dbc-4f322fc5-c4a1.cloud.databricks.com/oidc/v1/token",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "headerSecure": false
+              },
+              {
+                "name": "Authorization",
+                "value": "Basic REPLACE_WITH_BASE64_CLIENT_ID_AND_OAUTH_SECRET",
+                "headerSecure": false
+              }
+            ],
+            "sendIssue": false,
+            "contentType": "custom",
+            "customBody": "grant_type=client_credentials&scope=all-apis",
+            "method": "POST",
+            "responseEnabled": true,
+            "continueOnErrorEnabled": false
+          },
+          "children": [],
+          "conditions": []
+        },
+        {
+          "component": "CONDITION",
+          "schemaVersion": 1,
+          "type": "jira.comparator.condition",
+          "value": {
+            "first": "{{webResponse.status}}",
+            "second": "200",
+            "operator": "EQUALS"
+          },
+          "children": [],
+          "conditions": []
+        },
+        {
+          "component": "ACTION",
+          "schemaVersion": 1,
+          "type": "jira.issue.outgoing.webhook",
+          "value": {
+            "url": "https://kedb-api-7474655221377046.aws.databricksapps.com/api/jira/webhook",
+            "headers": [
+              {
+                "name": "Content-Type",
+                "value": "application/json",
+                "headerSecure": false
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer {{webResponse.body.access_token}}",
+                "headerSecure": false
+              },
+              {
+                "name": "X-Jira-Webhook-Token",
+                "value": "REPLACE_WITH_WEBHOOK_SECRET",
+                "headerSecure": false
+              }
+            ],
+            "sendIssue": false,
+            "contentType": "custom",
+            "customBody": "{\"webhookEvent\":\"jira:issue_created\",\"issue\":{\"key\":\"{{issue.key}}\",\"fields\":{\"summary\":{{issue.summary.asJsonString}},\"description\":\"{{issue.description.jsonEncode}}\",\"reporter\":{\"emailAddress\":\"{{issue.reporter.emailAddress}}\"}}}}",
+            "method": "POST",
+            "responseEnabled": true,
+            "continueOnErrorEnabled": false
+          },
+          "children": [],
+          "conditions": []
+        }
+      ]
+    }
+  ]
+}

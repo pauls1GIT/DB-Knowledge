@@ -1,0 +1,362 @@
+[
+  {
+    "key": "PROBLEM-1",
+    "source_ticket_id": "TKT-10001",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-2",
+    "source_ticket_id": "TKT-10002",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-3",
+    "source_ticket_id": "TKT-10003",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-4",
+    "source_ticket_id": "TKT-10004",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-5",
+    "source_ticket_id": "TKT-10005",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-6",
+    "source_ticket_id": "TKT-10006",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-7",
+    "source_ticket_id": "TKT-10007",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-8",
+    "source_ticket_id": "TKT-10008",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-9",
+    "source_ticket_id": "TKT-10009",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-10",
+    "source_ticket_id": "TKT-10010",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-11",
+    "source_ticket_id": "TKT-10011",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-12",
+    "source_ticket_id": "TKT-10012",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-13",
+    "source_ticket_id": "TKT-10013",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-14",
+    "source_ticket_id": "TKT-10014",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-15",
+    "source_ticket_id": "TKT-10015",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-16",
+    "source_ticket_id": "TKT-10016",
+    "source_status": "In Progress",
+    "jira_status": "In Progress"
+  },
+  {
+    "key": "PROBLEM-17",
+    "source_ticket_id": "TKT-10017",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-18",
+    "source_ticket_id": "TKT-10018",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-19",
+    "source_ticket_id": "TKT-10019",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-20",
+    "source_ticket_id": "TKT-10020",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-21",
+    "source_ticket_id": "TKT-10021",
+    "source_status": "In Progress",
+    "jira_status": "In Progress"
+  },
+  {
+    "key": "PROBLEM-22",
+    "source_ticket_id": "TKT-10022",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-23",
+    "source_ticket_id": "TKT-10023",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-24",
+    "source_ticket_id": "TKT-10024",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-25",
+    "source_ticket_id": "TKT-10025",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-26",
+    "source_ticket_id": "TKT-10026",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-27",
+    "source_ticket_id": "TKT-10027",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-28",
+    "source_ticket_id": "TKT-10028",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-29",
+    "source_ticket_id": "TKT-10029",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-30",
+    "source_ticket_id": "TKT-10030",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-31",
+    "source_ticket_id": "TKT-10031",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-32",
+    "source_ticket_id": "TKT-10032",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-33",
+    "source_ticket_id": "TKT-10033",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-34",
+    "source_ticket_id": "TKT-10034",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-35",
+    "source_ticket_id": "TKT-10035",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-36",
+    "source_ticket_id": "TKT-10036",
+    "source_status": "In Progress",
+    "jira_status": "In Progress"
+  },
+  {
+    "key": "PROBLEM-37",
+    "source_ticket_id": "TKT-10037",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-38",
+    "source_ticket_id": "TKT-10038",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-39",
+    "source_ticket_id": "TKT-10039",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-40",
+    "source_ticket_id": "TKT-10040",
+    "source_status": "In Progress",
+    "jira_status": "In Progress"
+  },
+  {
+    "key": "PROBLEM-41",
+    "source_ticket_id": "TKT-10041",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-42",
+    "source_ticket_id": "TKT-10042",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-43",
+    "source_ticket_id": "TKT-10043",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-44",
+    "source_ticket_id": "TKT-10044",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-45",
+    "source_ticket_id": "TKT-10045",
+    "source_status": "In Progress",
+    "jira_status": "In Progress"
+  },
+  {
+    "key": "PROBLEM-46",
+    "source_ticket_id": "TKT-10046",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-47",
+    "source_ticket_id": "TKT-10047",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-48",
+    "source_ticket_id": "TKT-10048",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-49",
+    "source_ticket_id": "TKT-10049",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-50",
+    "source_ticket_id": "TKT-10050",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-51",
+    "source_ticket_id": "TKT-10051",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-52",
+    "source_ticket_id": "TKT-10052",
+    "source_status": "Open",
+    "jira_status": "Backlog"
+  },
+  {
+    "key": "PROBLEM-53",
+    "source_ticket_id": "TKT-10053",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-54",
+    "source_ticket_id": "TKT-10054",
+    "source_status": "Resolved",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-55",
+    "source_ticket_id": "TKT-10055",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-56",
+    "source_ticket_id": "TKT-10056",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-57",
+    "source_ticket_id": "TKT-10057",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-58",
+    "source_ticket_id": "TKT-10058",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  },
+  {
+    "key": "PROBLEM-59",
+    "source_ticket_id": "TKT-10059",
+    "source_status": "Pending",
+    "jira_status": "Selected for Development"
+  },
+  {
+    "key": "PROBLEM-60",
+    "source_ticket_id": "TKT-10060",
+    "source_status": "Closed",
+    "jira_status": "Done"
+  }
+]

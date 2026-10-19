@@ -12,8 +12,7 @@ class CuratorState(TypedDict, total=False):
     jira_fields: dict
     retrieval_plan: dict
     exact_candidates: list[dict]
-    lexical_candidates: list[dict]
-    vector_candidates: list[dict]
+    hybrid_candidates: list[dict]
     candidates: list[dict]
     evaluation: dict
     proposal: dict
@@ -31,17 +30,17 @@ class CuratorState(TypedDict, total=False):
 GRAPH_NODES: list[tuple[str, str, str]] = [
     ("retrieve_jira_fields", "Retrieve Jira Fields", "process"),
     ("extract_structured_error_information", "Extract Structured Error Information", "ai"),
-    ("full_text_search", "Full Text Search", "retrieval"),
-    ("vector_search", "Vector Search", "retrieval"),
+    ("exact_search", "Exact Search", "retrieval"),
+    ("hybrid_search", "Hybrid Search (Databricks RRF)", "retrieval"),
     ("combine_candidates", "Combine Candidates", "process"),
-    ("rerank_candidates", "Rerank Candidates", "process"),
+    ("rerank_candidates", "RRF: Exact + Hybrid (k=60)", "process"),
     ("suitable_known_error_found", "Suitable Known Error Found?", "decision"),
     ("propose_existing_known_error", "Propose Existing Known Error Revision", "ai"),
     ("generate_new_known_error_candidate", "Generate New Known Error Candidate", "ai"),
     ("human_review", "Human Review", "human"),
     ("return_for_ai_revision", "Return for AI Revision", "ai"),
     ("reject", "Reject (No Publication)", "human"),
-    ("automatic_approve", "Automatically Create (Final Score < 0.2)", "process"),
+    ("automatic_approve", "Automatically Create (No Matches)", "process"),
     ("approve", "Approve", "human"),
     ("publish_approved_knowledge", "Publish Approved Knowledge", "publish"),
     ("create_update_article_version", "Create / Update Article Version", "publish"),
@@ -55,23 +54,23 @@ GRAPH_NODES: list[tuple[str, str, str]] = [
 GRAPH_EDGES: list[tuple[str, str, str | None]] = [
     ("__start__", "retrieve_jira_fields", None),
     ("retrieve_jira_fields", "extract_structured_error_information", None),
-    ("extract_structured_error_information", "full_text_search", None),
-    ("extract_structured_error_information", "vector_search", None),
-    ("full_text_search", "combine_candidates", None),
-    ("vector_search", "combine_candidates", None),
+    ("extract_structured_error_information", "exact_search", None),
+    ("extract_structured_error_information", "hybrid_search", None),
+    ("exact_search", "combine_candidates", None),
+    ("hybrid_search", "combine_candidates", None),
     ("combine_candidates", "rerank_candidates", None),
     ("rerank_candidates", "suitable_known_error_found", None),
     ("suitable_known_error_found", "propose_existing_known_error", "Yes"),
     ("suitable_known_error_found", "generate_new_known_error_candidate", "No"),
     ("propose_existing_known_error", "human_review", None),
-    ("generate_new_known_error_candidate", "human_review", "Final score >= 0.2"),
+    ("generate_new_known_error_candidate", "human_review", "Matches require review"),
     ("human_review", "return_for_ai_revision", "Modify"),
     ("human_review", "reject", "Reject"),
     ("human_review", "approve", "Approve"),
     ("return_for_ai_revision", "human_review", None),
     ("reject", "__end__", None),
-    ("suitable_known_error_found", "reject", "Any search > 0.8 / use existing"),
-    ("generate_new_known_error_candidate", "automatic_approve", "Final score < 0.2"),
+    ("suitable_known_error_found", "reject", "Exact score = 1 / use existing"),
+    ("generate_new_known_error_candidate", "automatic_approve", "No matches"),
     ("automatic_approve", "publish_approved_knowledge", None),
     ("approve", "publish_approved_knowledge", None),
     ("publish_approved_knowledge", "create_update_article_version", None),
@@ -161,8 +160,8 @@ class CuratorWorkflow:
             self.extract_structured_error_information,
         ):
             state.update(node(state))
-        state.update(self.full_text_search(state))
-        state.update(self.vector_search(state))
+        state.update(self.exact_search(state))
+        state.update(self.hybrid_search(state))
         state.update(self.combine_candidates(state))
         state.update(self.rerank_candidates(state))
         state.update(self.suitable_known_error_found(state))
@@ -240,62 +239,55 @@ class CuratorWorkflow:
         results = self.retrieval.exact_search(query, top_k=5)
         return {"exact_candidates": [self._candidate_to_dict(c) for c in results]}
 
-    def full_text_search(self, state: CuratorState) -> dict:
-        plan = state["retrieval_plan"]
-        query = " ".join(plan.get("keywords", [])) or plan.get("semantic_query", "")
-        results = self.retrieval.full_text_search(query, top_k=5)
-        return {"lexical_candidates": [self._candidate_to_dict(c) for c in results]}
-
-    def vector_search(self, state: CuratorState) -> dict:
+    def hybrid_search(self, state: CuratorState) -> dict:
         query = state["retrieval_plan"].get("semantic_query", "")
-        results = self.retrieval.vector_search(query, top_k=5)
-        return {"vector_candidates": [self._candidate_to_dict(c) for c in results]}
+        results = self.retrieval.hybrid_search(query, top_k=5)
+        return {"hybrid_candidates": [self._candidate_to_dict(c) for c in results]}
 
     def combine_candidates(self, state: CuratorState) -> dict:
-        merged: dict[tuple[str | None, str | None], dict] = {}
-        for channel, key in (
-            ("lexical", "lexical_candidates"),
-            ("vector", "vector_candidates"),
-        ):
-            for candidate in state.get(key, []):
+        merged = {}
+        for channel in ("exact", "hybrid"):
+            seen = set()
+            for candidate in state.get(f"{channel}_candidates", []):
                 identity = (candidate.get("known_error_id"), candidate.get("article_version_id"))
-                current = merged.setdefault(identity, dict(candidate))
-                methods = current.setdefault("retrieval_methods", [])
-                if channel not in methods:
-                    methods.append(channel)
-                score = float(candidate.get("final_score") or candidate.get("search_score") or 0.0)
-                current[f"{channel}_score"] = max(float(current.get(f"{channel}_score", 0.0)), score)
-                for score_key in ("exact_score", "lexical_score", "vector_score", "search_score"):
-                    current[score_key] = max(
-                        float(current.get(score_key, 0.0)), float(candidate.get(score_key, 0.0))
-                    )
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                current = merged.setdefault(identity, {
+                    **candidate, "exact_score": 0.0, "retrieval_methods": [],
+                })
+                current["retrieval_methods"].append(channel)
+                current[f"{channel}_rank"] = len(seen)
+                if channel == "exact":
+                    current["exact_score"] = float(candidate.get("exact_score", 0))
+                else:
+                    current["hybrid_score"] = float(candidate.get("final_score", 0))
         return {"candidates": list(merged.values())}
 
     def rerank_candidates(self, state: CuratorState) -> dict:
         candidates = [dict(c) for c in state.get("candidates", [])]
         for candidate in candidates:
-            exact = float(candidate.get("exact_score", 0.0))
-            lexical = float(candidate.get("lexical_score", 0.0))
-            vector = float(candidate.get("vector_score", 0.0))
-            search = float(candidate.get("search_score", 0.0))
-            candidate["final_score"] = 0.50 * lexical + 0.50 * vector
-        candidates.sort(key=lambda c: c.get("final_score", 0.0), reverse=True)
+            candidate["final_score"] = sum(
+                1.0 / (60 + candidate[key])
+                for key in ("exact_rank", "hybrid_rank") if key in candidate
+            )
+        candidates.sort(key=lambda c: c["final_score"], reverse=True)
         for rank, candidate in enumerate(candidates, start=1):
             candidate["rank"] = rank
         return {"candidates": candidates}
 
     def suitable_known_error_found(self, state: CuratorState) -> dict:
-        final_score = max((c.get("final_score", 0) for c in state.get("candidates", [])), default=0)
-        high_match = final_score > 0.70
-        if high_match or final_score < 0.35:
+        exact_match = any(float(c.get("exact_score", 0)) == 1.0
+                          for c in state.get("exact_candidates", []))
+        no_matches = not state.get("candidates")
+        if exact_match or no_matches:
             return {
                 "evaluation": {
-                    "recommendation": "USE_EXISTING" if high_match else "CREATE_NEW",
+                    "recommendation": "USE_EXISTING" if exact_match else "CREATE_NEW",
                     "confidence": 1.0,
-                    "reasoning": "Combined score exceeds 0.70" if high_match else "Combined score is below 0.35",
-                    "final_score": final_score,
+                    "reasoning": "Exact score is 1" if exact_match else "No search candidates found",
                 },
-                "automatic_create": not high_match,
+                "automatic_create": no_matches and not exact_match,
             }
         evaluation = self.llm.structured(
             system=(
@@ -466,11 +458,11 @@ def build_langgraph(workflow: CuratorWorkflow, *, checkpointer=None):
     graph.add_edge("retrieve_jira_fields", "extract_structured_error_information")
 
     # Fan-out hybrid retrieval.
-    graph.add_edge("extract_structured_error_information", "full_text_search")
-    graph.add_edge("extract_structured_error_information", "vector_search")
+    graph.add_edge("extract_structured_error_information", "exact_search")
+    graph.add_edge("extract_structured_error_information", "hybrid_search")
 
     # Barrier: combine only after both retrieval branches have completed.
-    graph.add_edge(["full_text_search", "vector_search"], "combine_candidates")
+    graph.add_edge(["exact_search", "hybrid_search"], "combine_candidates")
     graph.add_edge("combine_candidates", "rerank_candidates")
     graph.add_edge("rerank_candidates", "suitable_known_error_found")
 

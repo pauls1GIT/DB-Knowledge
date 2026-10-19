@@ -5,6 +5,7 @@ from kedb.infrastructure.search.in_memory import InMemorySearch
 from kedb.infrastructure import notifications
 from kedb.config import Settings
 from uuid import uuid4
+import pytest
 
 
 def test_webhook_reporter_top_three_retry_and_manual_delete(tmp_path, monkeypatch):
@@ -67,3 +68,44 @@ def test_jira_delivery_returns_candidates_without_smtp_or_reporter_email(tmp_pat
         result = client.post("/api/jira/webhook", json=body, headers=headers).json()
         assert result["candidate_count"] == 0
         assert "No similar" in result["email_body"]
+
+
+@pytest.mark.parametrize("delivery", ["jira", "smtp"])
+@pytest.mark.parametrize("status", ["PUBLISHED", "DRAFT", "MISSING"])
+def test_webhook_loads_only_published_resolution_for_index_matches(tmp_path, monkeypatch, delivery, status):
+    from kedb.domain import ArticleStatus, ArticleVersion, KnownError
+    from kedb.infrastructure.lakebase.repositories import SqlRepositories
+
+    database = Database(f"sqlite+pysqlite:///{tmp_path / 'resolution.db'}")
+    monkeypatch.setattr(api_module, "db", database)
+    monkeypatch.setattr(api_module, "settings", Settings(
+        _env_file=None, jira_webhook_token="secret", kedb_email_delivery=delivery))
+    known_error_id, version_id = uuid4(), uuid4()
+    # Model the AI Search response: a matching article ID, but no resolution.
+    monkeypatch.setattr(api_module, "make_search_adapter", lambda: InMemorySearch([
+        dict(known_error_id=known_error_id, article_version_id=version_id,
+             title="Oracle timeout", content="Oracle timeout")]))
+    sent = []
+    monkeypatch.setattr(notifications, "send_candidates", lambda settings, issue, recipient, candidates: sent.extend(candidates))
+    with TestClient(api_module.app) as client:
+        if status != "MISSING":
+            with database.sessions.begin() as session:
+                repo = SqlRepositories(session)
+                repo.add_known_error(KnownError(id=known_error_id, title="Oracle timeout"))
+                repo.add_version(ArticleVersion(
+                    id=version_id, known_error_id=known_error_id, version_number=1,
+                    title="Oracle timeout", problem="Oracle timeout", root_cause="Listener stopped",
+                    solution="Restart the listener", status=ArticleStatus(status)))
+        response = client.post("/api/jira/webhook", headers={"X-Jira-Webhook-Token": "secret"}, json={
+            "webhookEvent": "jira:issue_created", "issue": {"key": "T-RESOLUTION", "fields": {
+                "summary": "Oracle timeout", "reporter": {"emailAddress": "reporter@example.com"}}}})
+        assert response.status_code == 200, response.text
+        assert response.json()["candidate_count"] == 1
+        expected = "Restart the listener" if status == "PUBLISHED" else ""
+        if delivery == "jira":
+            result = response.json()
+            assert result["candidates"][0]["resolution"] == expected
+            for field in ("email_body", "email_body_html"):
+                assert ("Restart the listener" in result[field]) == (status == "PUBLISHED")
+        else:
+            assert sent[0].resolution == expected

@@ -20,7 +20,7 @@ class Search:
                  channel + "_score": score, "final_score": score, "search_score": score}]
 
     def exact_search(self, *args, **kwargs): return self.rows("exact")
-    def full_text_search(self, *args, **kwargs): return self.rows("lexical")
+    def hybrid_search(self, *args, **kwargs): return self.rows("vector")
     def vector_search(self, *args, **kwargs): return self.rows("vector")
 
 
@@ -37,7 +37,7 @@ def workflow(scores=None, publisher=None):
 
 
 @pytest.mark.parametrize("channel", ["lexical", "vector"])
-def test_any_high_search_rejects_without_publication(channel):
+def test_exact_match_rejects_without_publication(channel):
     scores = dict(exact=1, lexical=.70, vector=.70)
     scores[channel] = .70001
     wf = workflow(scores, publisher=lambda _: pytest.fail("Must not publish"))
@@ -48,11 +48,13 @@ def test_any_high_search_rejects_without_publication(channel):
     assert compiled["status"] == "REJECTED"
 
 
-@pytest.mark.parametrize("score", [0, .34999])
-def test_low_score_creates_and_publishes_without_human_review(score):
+def test_no_matches_creates_and_publishes_without_human_review():
+    score = 0
     published = []
     wf = workflow(dict(exact=score, lexical=score, vector=score),
                   publisher=lambda state: published.append(state["proposal"]) or {})
+    wf.retrieval.exact_search = lambda *a, **k: []
+    wf.retrieval.hybrid_search = lambda *a, **k: []
     state = build_langgraph(wf).invoke({"issue": {"summary": "new issue"}})
     assert state["status"] == "PUBLISHED_PENDING_INDEX"
     assert published[0]["action"] == "CREATE"
@@ -90,13 +92,24 @@ def test_graph_modify_loops_and_reject_terminates():
     assert "publication_result" not in state
 
 
-def test_exact_score_does_not_affect_formula_or_decision():
+def test_rrf_combines_ranks_and_exact_match_rejects():
     state = workflow(dict(exact=1, lexical=.4, vector=.6)).start({"summary": "timeout"})
-    assert state["candidates"][0]["final_score"] == .5
+    assert state["candidates"][0]["final_score"] == pytest.approx(2 / 61)
+    assert state["status"] == "REJECTED"
+
+
+def test_high_hybrid_score_requires_evaluation_and_review():
+    state = workflow(dict(exact=0, lexical=.9, vector=1)).start({"summary": "timeout"})
     assert state["status"] == "WAITING_FOR_REVIEW"
 
 
-def test_single_high_channel_does_not_override_combined_score():
-    state = workflow(dict(exact=1, lexical=.9, vector=.1)).start({"summary": "timeout"})
-    assert state["candidates"][0]["final_score"] == .5
-    assert state["status"] == "WAITING_FOR_REVIEW"
+def test_rrf_missing_channel_and_duplicate_chunks():
+    wf = workflow()
+    a = {"known_error_id": "a", "article_version_id": "a", "exact_score": .5}
+    b = {"known_error_id": "b", "article_version_id": "b", "final_score": .9}
+    state = {"exact_candidates": [a, a], "hybrid_candidates": [b, a]}
+    state.update(wf.combine_candidates(state))
+    ranked = wf.rerank_candidates(state)["candidates"]
+    assert ranked[0]["known_error_id"] == "a"
+    assert ranked[0]["final_score"] == pytest.approx(1 / 61 + 1 / 62)
+    assert ranked[1]["final_score"] == pytest.approx(1 / 61)

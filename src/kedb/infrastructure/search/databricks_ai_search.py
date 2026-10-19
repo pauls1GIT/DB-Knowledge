@@ -12,14 +12,22 @@ class DatabricksAISearch:
         index_name: str,
         workspace_url: str | None = None,
         token: str | None = None,
+        client_id: str | None = None,
+        client_secret: str | None = None,
     ):
         from databricks.ai_search.client import AISearchClient
 
         kwargs = {"disable_notice": True}
         if workspace_url:
+            workspace_url = workspace_url.strip().rstrip("/")
+            if "://" not in workspace_url:
+                workspace_url = "https://" + workspace_url
             kwargs["workspace_url"] = workspace_url
         if token:
             kwargs["personal_access_token"] = token
+        elif client_id and client_secret:
+            kwargs["service_principal_client_id"] = client_id
+            kwargs["service_principal_client_secret"] = client_secret
         self.client = AISearchClient(**kwargs)
         self.index = self.client.get_index(endpoint_name=endpoint_name, index_name=index_name)
 
@@ -59,7 +67,7 @@ class DatabricksAISearch:
                     title=title,
                     exact_score=exact,
                     lexical_score=numeric_score if query_type == "FULL_TEXT" else 0.0,
-                    vector_score=numeric_score if query_type in {"ANN", "HYBRID"} else 0.0,
+                    vector_score=numeric_score if query_type == "ANN" else 0.0,
                     search_score=numeric_score,
                 )
             )

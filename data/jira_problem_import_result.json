@@ -1,0 +1,312 @@
+[
+  {
+    "issues": [
+      {
+        "id": "10048",
+        "key": "PROBLEM-1",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10048"
+      },
+      {
+        "id": "10049",
+        "key": "PROBLEM-2",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10049"
+      },
+      {
+        "id": "10050",
+        "key": "PROBLEM-3",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10050"
+      },
+      {
+        "id": "10051",
+        "key": "PROBLEM-4",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10051"
+      },
+      {
+        "id": "10052",
+        "key": "PROBLEM-5",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10052"
+      },
+      {
+        "id": "10053",
+        "key": "PROBLEM-6",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10053"
+      },
+      {
+        "id": "10054",
+        "key": "PROBLEM-7",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10054"
+      },
+      {
+        "id": "10055",
+        "key": "PROBLEM-8",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10055"
+      },
+      {
+        "id": "10056",
+        "key": "PROBLEM-9",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10056"
+      },
+      {
+        "id": "10057",
+        "key": "PROBLEM-10",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10057"
+      },
+      {
+        "id": "10058",
+        "key": "PROBLEM-11",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10058"
+      },
+      {
+        "id": "10059",
+        "key": "PROBLEM-12",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10059"
+      },
+      {
+        "id": "10060",
+        "key": "PROBLEM-13",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10060"
+      },
+      {
+        "id": "10061",
+        "key": "PROBLEM-14",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10061"
+      },
+      {
+        "id": "10062",
+        "key": "PROBLEM-15",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10062"
+      },
+      {
+        "id": "10063",
+        "key": "PROBLEM-16",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10063"
+      },
+      {
+        "id": "10064",
+        "key": "PROBLEM-17",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10064"
+      },
+      {
+        "id": "10065",
+        "key": "PROBLEM-18",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10065"
+      },
+      {
+        "id": "10066",
+        "key": "PROBLEM-19",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10066"
+      },
+      {
+        "id": "10067",
+        "key": "PROBLEM-20",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10067"
+      },
+      {
+        "id": "10068",
+        "key": "PROBLEM-21",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10068"
+      },
+      {
+        "id": "10069",
+        "key": "PROBLEM-22",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10069"
+      },
+      {
+        "id": "10070",
+        "key": "PROBLEM-23",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10070"
+      },
+      {
+        "id": "10071",
+        "key": "PROBLEM-24",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10071"
+      },
+      {
+        "id": "10072",
+        "key": "PROBLEM-25",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10072"
+      },
+      {
+        "id": "10073",
+        "key": "PROBLEM-26",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10073"
+      },
+      {
+        "id": "10074",
+        "key": "PROBLEM-27",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10074"
+      },
+      {
+        "id": "10075",
+        "key": "PROBLEM-28",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10075"
+      },
+      {
+        "id": "10076",
+        "key": "PROBLEM-29",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10076"
+      },
+      {
+        "id": "10077",
+        "key": "PROBLEM-30",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10077"
+      },
+      {
+        "id": "10078",
+        "key": "PROBLEM-31",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10078"
+      },
+      {
+        "id": "10079",
+        "key": "PROBLEM-32",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10079"
+      },
+      {
+        "id": "10080",
+        "key": "PROBLEM-33",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10080"
+      },
+      {
+        "id": "10081",
+        "key": "PROBLEM-34",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10081"
+      },
+      {
+        "id": "10082",
+        "key": "PROBLEM-35",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10082"
+      },
+      {
+        "id": "10083",
+        "key": "PROBLEM-36",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10083"
+      },
+      {
+        "id": "10084",
+        "key": "PROBLEM-37",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10084"
+      },
+      {
+        "id": "10085",
+        "key": "PROBLEM-38",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10085"
+      },
+      {
+        "id": "10086",
+        "key": "PROBLEM-39",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10086"
+      },
+      {
+        "id": "10087",
+        "key": "PROBLEM-40",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10087"
+      },
+      {
+        "id": "10088",
+        "key": "PROBLEM-41",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10088"
+      },
+      {
+        "id": "10089",
+        "key": "PROBLEM-42",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10089"
+      },
+      {
+        "id": "10090",
+        "key": "PROBLEM-43",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10090"
+      },
+      {
+        "id": "10091",
+        "key": "PROBLEM-44",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10091"
+      },
+      {
+        "id": "10092",
+        "key": "PROBLEM-45",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10092"
+      },
+      {
+        "id": "10093",
+        "key": "PROBLEM-46",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10093"
+      },
+      {
+        "id": "10094",
+        "key": "PROBLEM-47",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10094"
+      },
+      {
+        "id": "10095",
+        "key": "PROBLEM-48",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10095"
+      },
+      {
+        "id": "10096",
+        "key": "PROBLEM-49",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10096"
+      },
+      {
+        "id": "10097",
+        "key": "PROBLEM-50",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10097"
+      }
+    ],
+    "errors": []
+  },
+  {
+    "issues": [
+      {
+        "id": "10098",
+        "key": "PROBLEM-51",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10098"
+      },
+      {
+        "id": "10099",
+        "key": "PROBLEM-52",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10099"
+      },
+      {
+        "id": "10100",
+        "key": "PROBLEM-53",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10100"
+      },
+      {
+        "id": "10101",
+        "key": "PROBLEM-54",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10101"
+      },
+      {
+        "id": "10102",
+        "key": "PROBLEM-55",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10102"
+      },
+      {
+        "id": "10103",
+        "key": "PROBLEM-56",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10103"
+      },
+      {
+        "id": "10104",
+        "key": "PROBLEM-57",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10104"
+      },
+      {
+        "id": "10105",
+        "key": "PROBLEM-58",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10105"
+      },
+      {
+        "id": "10106",
+        "key": "PROBLEM-59",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10106"
+      },
+      {
+        "id": "10107",
+        "key": "PROBLEM-60",
+        "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10107"
+      }
+    ],
+    "errors": []
+  }
+]

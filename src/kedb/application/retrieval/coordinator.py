@@ -50,6 +50,16 @@ class RetrievalCoordinator:
         rescored.sort(key=lambda c: c.final_score, reverse=True)
         return [replace(c, rank=i + 1) for i, c in enumerate(rescored[:top_k])]
 
+    def hybrid_search(self, query: str, top_k: int = 5) -> list[RetrievalCandidate]:
+        rows = self._search_port(query, query_type="HYBRID", top_k=top_k)
+        # Preserve the backend's fused score; collapse multiple chunks per article.
+        unique = {}
+        for candidate in sorted(rows, key=lambda c: c.search_score, reverse=True):
+            key = (candidate.known_error_id, candidate.article_version_id)
+            unique.setdefault(key, candidate)
+        return [replace(c, final_score=c.search_score, rank=i + 1)
+                for i, c in enumerate(list(unique.values())[:top_k])]
+
     def search(self, query: str, top_k: int = 5) -> list[RetrievalCandidate]:
         merged = {}
         for channel, rows in (("lexical_score", self.full_text_search(query, top_k)),

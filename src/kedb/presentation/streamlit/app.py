@@ -29,6 +29,33 @@ def api(method: str, path: str, **kwargs):
         return None
 
 
+def candidate_frame(candidates, *, review=False):
+    rows = []
+    for candidate in candidates:
+        row = {key: value for key, value in candidate.items()
+               if key not in {"search_score", "exact_score"}}
+        if "root_cause" not in row:
+            versions = api("GET", f"/api/known-errors/{row['known_error_id']}/versions") or []
+            version = next((v for v in versions if str(v["id"]) == str(row.get("article_version_id"))), {})
+            row["root_cause"] = version.get("root_cause") or "Not recorded"
+        row["root_cause"] = row.get("root_cause") or "Not recorded"
+        if review and ("exact_rank" in candidate or "hybrid_rank" in candidate):
+            row = {
+                "rank": candidate.get("rank"),
+                "title": candidate.get("title"),
+                "root_cause": row["root_cause"],
+                "exact_match": candidate.get("exact_score", 0) == 1,
+                "exact_rank": candidate.get("exact_rank"),
+                "hybrid_rank": candidate.get("hybrid_rank"),
+                "hybrid_score": candidate.get("hybrid_score"),
+                "final_score": candidate.get("final_score"),
+                "known_error_id": candidate.get("known_error_id"),
+                "article_version_id": candidate.get("article_version_id"),
+            }
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 @st.fragment(run_every=3)
 def render_incident_review():
     st.subheader("Incident Review")
@@ -122,7 +149,20 @@ def render_incident_review():
             st.caption(state["evaluation"].get("reasoning", ""))
         if state.get("candidates"):
             with st.expander("Search scores"):
-                st.dataframe(pd.DataFrame(state["candidates"]), hide_index=True)
+                if any("exact_rank" in c or "hybrid_rank" in c for c in state["candidates"]):
+                    st.caption("Exact match triggers automatic rejection. Final score combines exact and hybrid ranks using RRF (k=60); a missing channel contributes zero.")
+                    columns = {
+                        "exact_match": st.column_config.CheckboxColumn("Exact match"),
+                        "exact_rank": st.column_config.NumberColumn("Exact rank", format="%d"),
+                        "hybrid_rank": st.column_config.NumberColumn("Hybrid rank", format="%d"),
+                        "hybrid_score": st.column_config.NumberColumn("Hybrid score", format="%.3f"),
+                        "final_score": st.column_config.NumberColumn("Final RRF score", format="%.3f"),
+                    }
+                else:
+                    st.caption("Saved results from the previous scoring method.")
+                    columns = {}
+                st.dataframe(candidate_frame(state["candidates"], review=True),
+                             column_config=columns, hide_index=True)
         with st.form(f"review-{state['workflow_id']}-{state.get('revision_count', 0)}"):
             decision = st.selectbox("Review decision", ["APPROVE", "MODIFY", "REJECT"])
             reviewer = st.text_input("Reviewer", DEFAULT_REVIEWER)
@@ -216,7 +256,7 @@ def render_resolve_ticket() -> None:
 def render_search_kedb() -> None:
     st.subheader("Search KEDB")
     st.caption(
-        "Search approved KEDB knowledge for relevant known errors and resolutions."
+        "Search published knowledge with Databricks hybrid keyword and vector ranking. Database fallback uses keyword matching."
     )
     summary = st.text_input(
         "Search summary",
@@ -232,23 +272,25 @@ def render_search_kedb() -> None:
         else:
             result = api(
                 "POST",
-                "/api/tickets/resolve",
+                "/api/kedb/search",
                 json={
                     "summary": summary,
                     "description": description,
                 },
             )
 
-            st.session_state["search_candidates"] = (result or {}).get("candidates", [])
+            st.session_state["hybrid_search_candidates"] = (result or {}).get("candidates", [])
 
-    candidates = st.session_state.get("search_candidates")
+    candidates = st.session_state.get("hybrid_search_candidates")
 
     if candidates is not None:
         if candidates:
             st.success("Relevant KEDB knowledge found.")
 
             st.dataframe(
-                pd.DataFrame(candidates),
+                candidate_frame(candidates),
+                column_config={"final_score": st.column_config.NumberColumn(
+                    "Combined search score", format="%.3f")},
                 hide_index=True,
                 use_container_width=True,
             )
@@ -292,12 +334,12 @@ def render_graph() -> None:
         st.markdown(
             """
             1. Jira fields are normalized and an LLM creates a structured retrieval plan.
-            2. Exact, full-text and vector searches fan out in parallel, then merge and rerank.
-            3. Any search score > 0.8 rejects; final score < 0.2 automatically creates. Otherwise the AI chooses CREATE or UPDATE.
+            2. Exact and hybrid searches run in parallel. Their rankings are combined using RRF (k=60).
+            3. An exact score of 1 automatically rejects. No matches automatically creates. Otherwise AI evaluation chooses reuse or a proposal for review.
             4. Human review is a real LangGraph `interrupt()` node.
             5. `MODIFY` requests AI revision and returns to human review.
             6. `REJECT` ends the ticket without publishing.
-            7. Human approval or the low-score policy permits publication. The outbox schedules index materialization.
+            7. Human approval or the no-match policy permits publication. The outbox schedules index materialization.
             """
         )
 
@@ -332,52 +374,81 @@ def render_status() -> None:
             st.error(f"Article chunk materialization: {chunks['last_error']}")
         if chunks:
             st.metric("Publications waiting for chunks / sync", chunks.get("pending_publications") or 0)
+        st.caption("Rebuild search data from current published articles. Processing runs in the background; search becomes available after index sync completes.")
+        if st.button("Rebuild search index", disabled=not (
+            status.get("database_ready") and chunks.get("worker_running") and chunks.get("index")
+        )):
+            result = api("POST", "/api/system/rebuild-search-index")
+            if result:
+                st.success(f"Queued {result['articles_queued']} published article(s) for rebuilding. Refresh status to check progress.")
+        if st.button("Refresh status"):
+            st.rerun()
         st.json(status)
 
 
 with st.sidebar:
-    st.caption(f"Backend: {API}")
-    st.markdown("**App views**")
-    st.write("Use the tabs at the top for incident review, the LangGraph workflow, and deployment status.")
+    menu = st.radio("Main menu", ["KEDB", "Status", "Workflow Graph"])
+    st.markdown("**About KEDB**")
+    st.markdown('Welcome to the Known Error Database curator!.  \nThe application collects knowledge from resolved incidents. Each article describes a known problem.  \n-Root causes explain why it happened.  \n-Solutions capture how it was resolved.  \n-Search helps find relevant past issues.  \n-Keyword matching finds shared terms.  \n-Semantic search finds similar meanings.  \nThe curator prepares knowledge proposals.  \nReviewers can approve, modify, or reject them.  \nApproved articles become reusable knowledge.  \nNew versions preserve article history.  \nResolve Ticket answers from saved knowledge.  \nManage Tickets starts incident processing.  \nReuse proven solutions to resolve issues faster.')
 
-review_tab, resolve_tab, search_tab, graph_tab, status_tab, tickets_tab = st.tabs(
-    ["Incident Review", "Resolve Ticket", "Search KEDB", "Workflow Graph", "Status", "Manage Tickets"]
-)
-
-with review_tab:
-    render_incident_review()
-
-with resolve_tab:
-    render_resolve_ticket()
-
-with graph_tab:
-    render_graph()
-
-with search_tab:
-    render_search_kedb()
-
-with status_tab:
+if menu == "Status":
     render_status()
+elif menu == "Workflow Graph":
+    render_graph()
+else:
+    review_tab, resolve_tab, search_tab, tickets_tab = st.tabs(
+        ["Incident Review", "Resolve Ticket", "Search KEDB", "Manage Tickets"]
+    )
+    with review_tab:
+        render_incident_review()
+    with resolve_tab:
+        render_resolve_ticket()
+    with search_tab:
+        render_search_kedb()
 
-with tickets_tab:
-    st.subheader("Manage Tickets")
-    with st.form("insert_ticket"):
-        key = st.text_input("Ticket key")
-        summary = st.text_input("Summary")
-        description = st.text_area("Description")
-        resolution = st.text_area("Resolution")
-        if st.form_submit_button("Insert ticket"):
-            if not key.strip() or not summary.strip():
-                st.error("Ticket key and summary are required.")
-            elif api("POST", "/api/jira/issues", json=dict(external_key=key.strip(),
-                      summary=summary.strip(), description=description, resolution=resolution)):
-                st.success("Ticket saved.")
-    tickets = api("GET", "/api/jira/issues") or []
-    if tickets:
-        selected = st.selectbox("Ticket to delete", tickets,
-                                format_func=lambda t: f"{t['external_key']}: {t['summary']}")
-        confirm = st.checkbox("Delete this ticket from the curator database")
-        st.caption("This does not delete the original Jira issue. Tickets linked to published knowledge are retained.")
-        if st.button("Delete ticket", disabled=not confirm):
-            if api("DELETE", f"/api/jira/issues/{selected['id']}"):
-                st.rerun()
+    with tickets_tab:
+        st.subheader("Manage Tickets")
+        with st.form("insert_ticket"):
+            summary = st.text_input("Summary")
+            description = st.text_area("Description")
+            resolution = st.text_area("Resolution")
+            if st.form_submit_button("Insert ticket"):
+                if not summary.strip():
+                    st.error("Summary is required.")
+                else:
+                    started = api("POST", "/api/jira/issues/curate", json=dict(
+                        summary=summary.strip(),
+                        description=description, resolution=resolution,
+                    ))
+                    if started:
+                        st.session_state["batch_id"] = started["batch_id"]
+                        st.success("Ticket saved and queued for processing. Follow progress and review proposals in Incident Review.")
+        st.subheader("Insert tickets from Excel")
+        from kedb.application.excel_tickets import ticket_template, read_ticket_workbook
+        st.caption("Upload resolved tickets with their actual fixes. Follow batch progress and review proposals in Incident Review. IDs are generated automatically. Identical ticket content reuses its saved workflow.")
+        st.download_button("Download Excel template", ticket_template(),
+                           "kedb_ticket_template.xlsx",
+                           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        workbook = st.file_uploader("Tickets workbook", type=["xlsx"], key="ticket_excel")
+        if workbook is not None:
+            try:
+                uploaded_tickets = read_ticket_workbook(workbook.getvalue())
+            except ValueError as exc:
+                st.error(str(exc))
+            else:
+                st.dataframe(pd.DataFrame(uploaded_tickets).drop(columns=["status", "ticket_id"]), hide_index=True)
+                if st.button(f"Process {len(uploaded_tickets)} tickets", type="primary"):
+                    started = api("POST", "/api/batches/play", json={"source": "json", "tickets": uploaded_tickets})
+                    if started:
+                        st.session_state["batch_id"] = started["batch_id"]
+                        st.success("Batch queued. Open Incident Review to follow progress and approve proposals.")
+
+        tickets = api("GET", "/api/jira/issues") or []
+        if tickets:
+            selected = st.selectbox("Ticket to delete", tickets,
+                                    format_func=lambda t: f"{t['external_key']}: {t['summary']}")
+            confirm = st.checkbox("Delete this ticket from the curator database")
+            st.caption("This does not delete the original Jira issue. Tickets linked to published knowledge are retained.")
+            if st.button("Delete ticket", disabled=not confirm):
+                if api("DELETE", f"/api/jira/issues/{selected['id']}"):
+                    st.rerun()

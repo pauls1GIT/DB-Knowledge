@@ -99,3 +99,51 @@ def test_sql_sink_binds_content_and_uses_single_atomic_merge():
     assert "WHEN NOT MATCHED BY SOURCE" in calls[0]["statement"]
     with pytest.raises(ValueError):
         SqlChunkSink(warehouse_id="wh", table="bad; DROP TABLE t")
+
+@pytest.mark.parametrize("missing_event", [False, True])
+def test_rebuild_recovers_missing_chunks_without_republishing(tmp_path, missing_event):
+    from sqlalchemy import func, delete
+    from kedb.infrastructure.lakebase.models import ArticleVersionRow
+    db = setup(tmp_path)
+    article = publish(db)
+    sink = Sink()
+    materializer = MaterializePublications(db, sink)
+    assert materializer.run_once() == 1
+    sink.rows.clear()
+    if missing_event:
+        with db.sessions.begin() as session:
+            session.execute(delete(PublicationOutboxRow))
+    assert materializer.requeue_current(article.id) == 1
+    assert materializer.run_once() == 1
+    assert len(sink.rows) == 2
+    assert materializer.run_once() == 0
+    with db.sessions() as session:
+        assert session.scalar(select(func.count()).select_from(ArticleVersionRow)) == 1
+
+
+def test_rebuild_reports_absent_article(tmp_path):
+    materializer = MaterializePublications(setup(tmp_path), Sink())
+    with pytest.raises(ValueError, match="No current published articles"):
+        materializer.requeue_current(uuid4())
+
+
+def test_worker_wakes_without_waiting_for_poll_interval():
+    from threading import Event
+    from kedb.application.use_cases.materialize import MaterializationWorker
+    first = Event()
+    second = Event()
+    class Materializer:
+        calls = 0
+        def run_once(self):
+            self.calls += 1
+            (first if self.calls == 1 else second).set()
+            return 0
+    worker = MaterializationWorker(Materializer(), interval=3600)
+    worker.start()
+    try:
+        assert first.wait(2)
+        worker.wake()
+        assert second.wait(2)
+    finally:
+        worker.stop()
+    assert not worker.thread.is_alive()

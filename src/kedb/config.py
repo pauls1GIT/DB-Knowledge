@@ -11,6 +11,8 @@ class Settings(BaseSettings):
 
     databricks_host: str = ""
     databricks_token: str = ""
+    databricks_client_id: str = ""
+    databricks_client_secret: str = ""
     databricks_ai_search_endpoint: str = ""
     databricks_ai_search_index: str = ""
     databricks_model_endpoint: str = ""

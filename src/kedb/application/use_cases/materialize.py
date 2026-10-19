@@ -10,7 +10,7 @@ from sqlalchemy import select
 
 from kedb.application.incidents import extract_error_code
 from kedb.application.use_cases.publish import semantic_chunks
-from kedb.infrastructure.lakebase.models import PublicationOutboxRow
+from kedb.infrastructure.lakebase.models import PublicationOutboxRow, KnownErrorRow
 from kedb.infrastructure.lakebase.repositories import SqlRepositories
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,29 @@ class MaterializePublications:
         self.lock = Lock()
         self.last_error = None
         self.last_count = 0
+
+    def requeue_current(self, article_version_id=None):
+        """Repair delivery without creating a new article version."""
+        with self.database.sessions.begin() as session:
+            query = select(KnownErrorRow).where(KnownErrorRow.current_version_id.is_not(None))
+            if article_version_id is not None:
+                query = query.where(KnownErrorRow.current_version_id == str(article_version_id))
+            known_errors = session.scalars(query).all()
+            if not known_errors:
+                raise ValueError("No current published articles found in the configured database")
+            repo = SqlRepositories(session)
+            for known_error in known_errors:
+                article = repo.get_version(UUID(known_error.current_version_id))
+                if article is None or not article.can_embed:
+                    raise ValueError("Current article is missing or is not approved for indexing")
+                events = session.scalars(select(PublicationOutboxRow).where(
+                    PublicationOutboxRow.article_version_id == str(article.id))).all()
+                if events:
+                    for event in events:
+                        event.processed = False
+                else:
+                    repo.add_outbox(article)
+            return len(known_errors)
 
     def run_once(self, limit=100):
         if not self.lock.acquire(blocking=False):
@@ -93,20 +116,26 @@ class MaterializationWorker:
         self.materializer = materializer
         self.interval = interval
         self.stopping = Event()
+        self.pending = Event()
         self.thread = Thread(target=self.run, name="article-chunks", daemon=True)
 
     def start(self): self.thread.start()
 
+    def wake(self):
+        self.pending.set()
+
     def stop(self):
         self.stopping.set()
+        self.pending.set()
         self.thread.join(timeout=5)
 
     def run(self):
         while not self.stopping.is_set():
+            self.pending.clear()
             try:
                 count = self.materializer.run_once()
                 if count:
                     continue
             except Exception:
                 logger.exception("Article chunk materialization failed; retrying later")
-            self.stopping.wait(self.interval)
+            self.pending.wait(self.interval)

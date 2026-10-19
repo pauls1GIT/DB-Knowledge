@@ -32,11 +32,12 @@ settings = Settings()
 db = Database(settings.kedb_database_url)
 startup_error: str | None = None
 materializer = None
+chunk_worker = None
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    global startup_error, materializer
+    global startup_error, materializer, chunk_worker
     try:
         db.create_all()
         db.ping()
@@ -75,6 +76,10 @@ class JiraIn(BaseModel):
     description: str
     resolution: str = ""
     error_code: str | None = None
+
+
+class ManualTicketIn(JiraIn):
+    external_key: str = ""
 
 
 class SearchIn(BaseModel):
@@ -117,7 +122,14 @@ def make_search_adapter():
         try:
             from kedb.infrastructure.search.databricks_ai_search import DatabricksAISearch
 
-            return DatabricksAISearch(endpoint_name=endpoint, index_name=index)
+            return DatabricksAISearch(
+                endpoint_name=endpoint,
+                index_name=index,
+                workspace_url=settings.databricks_host or None,
+                token=settings.databricks_token or None,
+                client_id=settings.databricks_client_id or None,
+                client_secret=settings.databricks_client_secret or None,
+            )
         except Exception as exc:
             print(f"AI Search unavailable; falling back to database search: {exc}", flush=True)
 
@@ -165,6 +177,7 @@ def system_status():
                 PublicationOutboxRow.processed.is_(False)))
     result["article_chunks"] = {
         "table": settings.kedb_uc_chunk_table,
+        "index": settings.databricks_ai_search_index,
         "warehouse_configured": bool(settings.databricks_warehouse_id),
         "worker_running": materializer is not None,
         "pending_publications": pending,
@@ -176,6 +189,26 @@ def system_status():
         ),
     }
     return result
+
+
+@app.post("/api/system/rebuild-search-index")
+def rebuild_search_index():
+    require_database()
+    if materializer is None:
+        raise HTTPException(503, "The publication worker is unavailable. Check the database and SQL warehouse configuration.")
+    if not settings.databricks_ai_search_index:
+        raise HTTPException(503, "DATABRICKS_AI_SEARCH_INDEX must be configured before rebuilding.")
+    if not materializer.lock.acquire(blocking=False):
+        raise HTTPException(409, "Publication processing is active. Try rebuilding again after it finishes.")
+    try:
+        count = materializer.requeue_current()
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    finally:
+        materializer.lock.release()
+    if chunk_worker:
+        chunk_worker.wake()
+    return {"status": "QUEUED", "articles_queued": count}
 
 
 @app.post("/api/jira/issues")
@@ -196,6 +229,34 @@ def create_issue(body: JiraIn):
                 return existing.__dict__
             raise
     return issue.__dict__
+
+
+@app.post("/api/jira/issues/curate")
+def create_and_curate_issue(body: ManualTicketIn):
+    from kedb.application.excel_tickets import generated_ticket_key
+    if not body.external_key.strip():
+        body = body.model_copy(update={"external_key": generated_ticket_key(
+            body.summary, body.description, body.resolution)})
+    issue = create_issue(body)
+    batch_id = f"manual:{issue['id']}"
+    item = {field: issue.get(field) for field in JiraIn.model_fields}
+    with db.sessions.begin() as session:
+        batch = session.get(CsvBatchRow, batch_id)
+        if batch is None:
+            try:
+                with session.begin_nested():
+                    session.add(CsvBatchRow(
+                        id=batch_id, source="Manage Tickets", items=[item],
+                        position=0, results=[], status="RUNNING",
+                    ))
+                    session.flush()
+            except IntegrityError:
+                pass
+            batch = session.get(CsvBatchRow, batch_id)
+        if batch.position < len(batch.items):
+            batch.status = "RUNNING"
+            batch.error = None
+    return {"issue_id": str(issue["id"]), "batch_id": batch_id}
 
 
 @app.get("/api/jira/issues/by-key/{external_key}")
@@ -239,24 +300,37 @@ def search(body: SearchIn):
 
 @app.post("/api/tickets/resolve")
 def resolve_ticket(body: ResolveTicketIn):
+    return retrieve_ticket_candidates(body)
+
+
+@app.post("/api/kedb/search")
+def search_kedb(body: ResolveTicketIn):
+    return retrieve_ticket_candidates(body, hybrid=True)
+
+
+def retrieve_ticket_candidates(body: ResolveTicketIn, *, hybrid=False):
     query = f"{body.summary}\n{body.description}"
 
     retriever = RetrievalCoordinator(make_search_adapter())
-    candidates = retriever.search(query, settings.kedb_search_top_k)
+    candidates = (retriever.hybrid_search if hybrid else retriever.search)(query, settings.kedb_search_top_k)
     # AI Search indexes chunks; load the complete published resolution from Lakebase.
     results = []
     with db.sessions() as session:
         repo = SqlRepositories(session)
         for candidate in candidates:
             result = dict(candidate.__dict__)
-            if not result["resolution"]:
-                version = repo.get_version(candidate.article_version_id)
-                if version and version.status.value == "PUBLISHED":
+            version = repo.get_version(candidate.article_version_id)
+            result["root_cause"] = ""
+            if version and version.status.value == "PUBLISHED":
+                result["root_cause"] = version.root_cause
+                if not result["resolution"]:
                     result["resolution"] = version.solution
+            if hybrid:
+                for field in ("lexical_score", "vector_score", "exact_score", "search_score"):
+                    result.pop(field, None)
             results.append(result)
 
     return {"query": query, "candidates": results}
-
 
 @app.post("/api/tickets/grounded-answer")
 def grounded_answer(body: GroundedQuestionIn):
@@ -295,6 +369,8 @@ def publish(body: PublishIn):
                 review=review,
                 jira_issue_id=body.jira_issue_id,
             )
+        if chunk_worker:
+            chunk_worker.wake()
         return {
             "article_version_id": published.id,
             "known_error_id": published.known_error_id,
@@ -332,7 +408,10 @@ def workflow_for(session):
     def publisher(state):
         if session is None:
             with db.sessions.begin() as publication_session:
-                return workflow_for(publication_session).publisher(state)
+                result = workflow_for(publication_session).publisher(state)
+            if chunk_worker:
+                chunk_worker.wake()
+            return result
         review = state["review"]
         article = PublishApprovedKnowledge(SqlRepositories(session)).execute(
             proposal=KnowledgeProposal.model_validate(state["proposal"]),
@@ -412,6 +491,8 @@ def review_workflow(workflow_id: UUID, body: ReviewIn):
             save_workflow(row, state)
     except (ValueError, LookupError) as exc:
         raise HTTPException(400, str(exc)) from exc
+    if state.get("publication_result") and chunk_worker:
+        chunk_worker.wake()
     return state
 
 
@@ -592,6 +673,16 @@ def jira_created(body: dict, x_jira_webhook_token: str = Header(default="")):
                                description=jira_text(fields.get("description"))))
     candidates = RetrievalCoordinator(make_search_adapter()).search(
         fields["summary"] + " " + jira_text(fields.get("description")), top_k=3)
+    # AI Search returns chunk matches without the complete article solution.
+    # Hydrate before either email delivery path, as Resolve Ticket does.
+    from dataclasses import replace
+    with db.sessions() as session:
+        repo = SqlRepositories(session)
+        for index, candidate in enumerate(candidates):
+            if not candidate.resolution:
+                version = repo.get_version(candidate.article_version_id)
+                if version and version.status.value == "PUBLISHED":
+                    candidates[index] = replace(candidate, resolution=version.solution)
     if settings.kedb_email_delivery == "jira":
         from kedb.infrastructure.notifications import candidate_email
         return {**candidate_email(raw["key"], fields["summary"], candidates), "issue_id": issue["id"]}

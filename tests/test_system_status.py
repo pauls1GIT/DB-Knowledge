@@ -31,3 +31,32 @@ def test_missing_warehouse_with_healthy_database_requests_configuration(tmp_path
     assert chunks["warehouse_configured"] is False
     assert "DATABRICKS_WAREHOUSE_ID" in chunks["configuration_required"]
     assert chunks["last_error"] is None
+
+
+def test_rebuild_endpoint_queues_processed_article_and_guards_configuration(tmp_path, monkeypatch):
+    from threading import Lock
+    from unittest.mock import Mock
+    from fastapi import HTTPException
+    worker = Mock(lock=Lock(), last_error=None)
+    worker.requeue_current.return_value = 2
+    monkeypatch.setattr(api_module, "startup_error", None)
+    monkeypatch.setattr(api_module, "materializer", worker)
+    monkeypatch.setattr(api_module.settings, "databricks_ai_search_index", "catalog.schema.index")
+    client = TestClient(api_module.app)
+    response = client.post("/api/system/rebuild-search-index")
+    assert response.status_code == 200
+    assert response.json() == {"status": "QUEUED", "articles_queued": 2}
+    worker.requeue_current.assert_called_once_with()
+    worker.run_once.assert_not_called()
+    worker.lock.acquire()
+    try:
+        assert client.post("/api/system/rebuild-search-index").status_code == 409
+    finally:
+        worker.lock.release()
+    worker.requeue_current.side_effect = ValueError("No current published articles found")
+    assert client.post("/api/system/rebuild-search-index").status_code == 400
+    assert not worker.lock.locked()
+    monkeypatch.setattr(api_module.settings, "databricks_ai_search_index", "")
+    assert client.post("/api/system/rebuild-search-index").status_code == 503
+    monkeypatch.setattr(api_module, "materializer", None)
+    assert client.post("/api/system/rebuild-search-index").status_code == 503

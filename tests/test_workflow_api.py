@@ -112,3 +112,57 @@ def test_batch_play_returns_immediately_and_restores_saved_queue(tmp_path, monke
     with db.sessions() as session:
         assert session.scalar(select(func.count()).select_from(CsvBatchRow)) == 1
         assert session.scalar(select(func.count()).select_from(ArticleVersionRow)) == 1
+
+
+def test_manage_ticket_queues_and_publishes_once(tmp_path, monkeypatch):
+    from kedb.application.workflows.batch import BatchWorker
+    db = Database(f"sqlite+pysqlite:///{tmp_path / 'manual.db'}")
+    monkeypatch.setattr(api_module, "db", db)
+    monkeypatch.setattr(BatchWorker, "start", lambda self: None)
+    monkeypatch.setattr(BatchWorker, "stop", lambda self: None)
+    monkeypatch.setattr(api_module, "make_search_adapter", lambda: InMemorySearch([]))
+    monkeypatch.setattr(api_module, "make_llm", lambda: FakeLLM({
+        RetrievalPlan: RetrievalPlan(semantic_query="new failure"),
+        KnowledgeProposal: KnowledgeProposal(action="CREATE", title="t", problem="p", root_cause="r", solution="s"),
+    }))
+    with TestClient(api_module.app) as client:
+        body = dict(external_key="MANUAL-1", summary="New failure", description="d", resolution="Fix")
+        response = client.post("/api/jira/issues/curate", json=body)
+        assert response.status_code == 200, response.text
+        queued = response.json()
+        assert client.post("/api/jira/issues/curate", json=body).json() == queued
+        with db.sessions() as session:
+            assert session.scalar(select(func.count()).select_from(ArticleVersionRow)) == 0
+        worker = BatchWorker(db, api_module.process_batch_item)
+        assert worker.process_next()
+        status = client.get(f"/api/batches/{queued['batch_id']}").json()
+        assert status["status"] == "COMPLETE"
+        assert status["results"][0]["status"] == "PUBLISHED_PENDING_INDEX"
+        assert client.post("/api/jira/issues/curate", json=body).json() == queued
+        assert not worker.process_next()
+    with db.sessions() as session:
+        assert session.scalar(select(func.count()).select_from(JiraIssueRow)) == 1
+        assert session.scalar(select(func.count()).select_from(ArticleVersionRow)) == 1
+
+
+def test_publication_wakes_chunks_only_after_database_commit(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from kedb.infrastructure.lakebase.models import PublicationOutboxRow
+    db = Database(f"sqlite+pysqlite:///{tmp_path / 'wake.db'}")
+    db.create_all()
+    monkeypatch.setattr(api_module, 'db', db)
+    monkeypatch.setattr(api_module, 'startup_error', None)
+    calls = []
+    def wake():
+        with db.sessions() as session:
+            assert session.scalar(select(func.count()).select_from(ArticleVersionRow)) == 1
+            assert session.scalar(select(func.count()).select_from(PublicationOutboxRow)) == 1
+        calls.append(True)
+    monkeypatch.setattr(api_module, 'chunk_worker', SimpleNamespace(wake=wake))
+    response = TestClient(api_module.app).post('/api/publications', json={
+        'workflow_id': str(uuid4()),
+        'proposal': {'action': 'CREATE', 'title': 't', 'problem': 'p', 'root_cause': 'r', 'solution': 's'},
+        'review': {'decision': 'APPROVE', 'reviewer': 'tester'},
+    })
+    assert response.status_code == 200, response.text
+    assert calls == [True]
