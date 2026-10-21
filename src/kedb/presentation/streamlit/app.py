@@ -256,30 +256,36 @@ def render_resolve_ticket() -> None:
 def render_search_kedb() -> None:
     st.subheader("Search KEDB")
     st.caption(
-        "Search published knowledge with Databricks hybrid keyword and vector ranking. Database fallback uses keyword matching."
+        "Search published knowledge using error codes, natural-language "
+        "descriptions, or both."
     )
-    summary = st.text_input(
-        "Search summary",
-        placeholder="e.g. Oracle application connection times out",
+
+    identifier = st.text_input(
+        "Error code / technical identifier",
+        placeholder="e.g. ORA-12170 or HTTP 403",
     )
+
     description = st.text_area(
-    "Search description",
-    placeholder="Describe the problem, symptoms, error messages, etc.",
+        "Describe your issue",
+        placeholder="e.g. My Oracle database connection keeps timing out.",
     )
+
     if st.button("Search KEDB", type="primary"):
-        if not summary.strip() and not description.strip():
-            st.warning("Enter a search summary or description.")
+        if not identifier.strip() and not description.strip():
+            st.warning("Enter an error code or describe your issue.")
         else:
             result = api(
                 "POST",
                 "/api/kedb/search",
                 json={
-                    "summary": summary,
+                    "summary": identifier,
                     "description": description,
                 },
             )
 
-            st.session_state["hybrid_search_candidates"] = (result or {}).get("candidates", [])
+            st.session_state["hybrid_search_candidates"] = (
+                (result or {}).get("candidates", [])
+            )
 
     candidates = st.session_state.get("hybrid_search_candidates")
 
@@ -289,8 +295,12 @@ def render_search_kedb() -> None:
 
             st.dataframe(
                 candidate_frame(candidates),
-                column_config={"final_score": st.column_config.NumberColumn(
-                    "Combined search score", format="%.3f")},
+                column_config={
+                    "final_score": st.column_config.NumberColumn(
+                        "Combined search score",
+                        format="%.3f",
+                    )
+                },
                 hide_index=True,
                 use_container_width=True,
             )

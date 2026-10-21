@@ -305,8 +305,43 @@ def resolve_ticket(body: ResolveTicketIn):
 
 @app.post("/api/kedb/search")
 def search_kedb(body: ResolveTicketIn):
-    return retrieve_ticket_candidates(body, hybrid=True)
+    identifier = body.summary.strip()
+    description = body.description.strip()
 
+    retriever = RetrievalCoordinator(make_search_adapter())
+
+    candidates = retriever.search_by_fields(
+        identifier_query=identifier,
+        description_query=description,
+        top_k=settings.kedb_search_top_k,
+    )
+
+    results = []
+
+    with db.sessions() as session:
+        repo = SqlRepositories(session)
+
+        for candidate in candidates:
+            result = dict(candidate.__dict__)
+            version = repo.get_version(candidate.article_version_id)
+
+            result["root_cause"] = ""
+
+            if version and version.status.value == "PUBLISHED":
+                result["root_cause"] = version.root_cause
+
+                if not result["resolution"]:
+                    result["resolution"] = version.solution
+
+            results.append(result)
+
+    return {
+        "query": {
+            "identifier": identifier,
+            "description": description,
+        },
+        "candidates": results,
+    }
 
 def retrieve_ticket_candidates(body: ResolveTicketIn, *, hybrid=False):
     query = f"{body.summary}\n{body.description}"
@@ -385,18 +420,11 @@ def make_llm():
     if settings.databricks_model_endpoint:
         from kedb.infrastructure.llm.databricks_model import DatabricksModelServingProvider
 
-        host, token = settings.databricks_host, settings.databricks_token
-        if not host or not token:
-            from databricks.sdk import WorkspaceClient
-
-            workspace = WorkspaceClient()
-            host = workspace.config.host
-            token = workspace.config.authenticate()["Authorization"].removeprefix("Bearer ")
+        from kedb.infrastructure.databricks_auth import workspace_client
 
         return DatabricksModelServingProvider(
-            base_url=host,
-            token=token,
             model=settings.databricks_model_endpoint,
+            workspace_client=workspace_client(settings),
         )
 
     from kedb.infrastructure.llm.ollama_model import OllamaModelProvider

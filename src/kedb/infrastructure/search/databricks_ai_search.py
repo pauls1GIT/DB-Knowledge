@@ -72,3 +72,56 @@ class DatabricksAISearch:
                 )
             )
         return candidates
+
+    def search_exact_identifier(
+        self, identifier: str, top_k: int = 5
+    ) -> list[RetrievalCandidate]:
+        identifier = identifier.strip().upper()
+        if not identifier:
+            return []
+
+        result = self.index.similarity_search(
+            columns=[
+                "known_error_id",
+                "article_version_id",
+                "title",
+                "error_codes",
+            ],
+            num_results=top_k,
+            filters={
+                "error_codes": identifier,
+                "is_current": True,
+                "status": "PUBLISHED",
+            },
+        )
+
+        rows = result.get("result", {}).get("data_array", [])
+        candidates = []
+        seen = set()
+
+        for row in rows:
+            known_error_id, version_id, title, error_codes, _score = row
+
+            if identifier not in (error_codes or []):
+                continue
+
+            key = (known_error_id, version_id)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            candidates.append(
+                RetrievalCandidate(
+                    known_error_id=UUID(known_error_id),
+                    article_version_id=UUID(version_id),
+                    title=title,
+                    exact_score=1.0,
+                    lexical_score=0.0,
+                    vector_score=0.0,
+                    search_score=1.0,
+                    final_score=1.0,
+                    rank=len(candidates) + 1,
+                )
+            )
+
+        return candidates

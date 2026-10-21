@@ -72,3 +72,81 @@ class RetrievalCoordinator:
                     for c in merged.values()]
         rescored.sort(key=lambda c: c.final_score, reverse=True)
         return [replace(c, rank=i + 1) for i, c in enumerate(rescored[:top_k])]
+
+    def search_exact_identifier(
+        self, query: str, top_k: int = 5
+    ) -> list[RetrievalCandidate]:
+        identifiers = self.identifiers(query)
+
+        if not identifiers:
+            return []
+
+        results = {}
+
+        for identifier in identifiers:
+            candidates = self.search_port.search_exact_identifier(
+                identifier, top_k=top_k
+            )
+
+            for candidate in candidates:
+                key = (candidate.known_error_id, candidate.article_version_id)
+                results.setdefault(key, candidate)
+
+        return [
+            replace(candidate, rank=i + 1)
+            for i, candidate in enumerate(list(results.values())[:top_k])
+        ]
+
+    def search_by_fields(
+        self,
+        identifier_query: str,
+        description_query: str,
+        top_k: int = 5,
+    ) -> list[RetrievalCandidate]:
+        identifier_query = identifier_query.strip()
+        description_query = description_query.strip()
+
+        if not identifier_query and not description_query:
+            return []
+
+        # Identifier-only: exact matching.
+        if identifier_query and not description_query:
+            return self.search_exact_identifier(identifier_query, top_k)
+
+        # Description-only: lexical + vector retrieval.
+        if description_query and not identifier_query:
+            return self.search(description_query, top_k)
+
+        # Both fields: retrieve independently, then combine rankings.
+        exact_results = self.search_exact_identifier(identifier_query, top_k)
+        description_results = self.search(description_query, top_k)
+
+        rrf_k = 60
+        fused = {}
+
+        for results in (exact_results, description_results):
+            for position, candidate in enumerate(results, start=1):
+                key = (candidate.known_error_id, candidate.article_version_id)
+
+                if key not in fused:
+                    fused[key] = {
+                        "candidate": candidate,
+                        "score": 0.0,
+                    }
+
+                fused[key]["score"] += 1.0 / (rrf_k + position)
+
+        ranked = sorted(
+            fused.values(),
+            key=lambda item: item["score"],
+            reverse=True,
+        )
+
+        return [
+            replace(
+                item["candidate"],
+                final_score=item["score"],
+                rank=i + 1,
+            )
+            for i, item in enumerate(ranked[:top_k])
+        ]
