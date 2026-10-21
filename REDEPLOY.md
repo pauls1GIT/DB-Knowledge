@@ -21,6 +21,12 @@ Before deployment, create/attach these resources to the Databricks App:
 
 The application can start without AI Search/model configuration. Lakebase is required for persistence.
 
+The curator uses compiled LangGraph execution with `ChatDatabricks` and
+`DatabricksVectorSearch` from `databricks-langchain`. Redeploy with the updated
+`requirements.txt` when upgrading from the raw-client workflow. Existing model
+and search resources are reused; no Unity Catalog function tools are required.
+Review checkpoints remain in the existing Lakebase tables.
+
 ## 2. Configure the Lakebase endpoint name
 
 Attaching Lakebase injects `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, and `PGSSLMODE`.
@@ -46,6 +52,20 @@ If your AI Search names differ, also edit:
 - `DATABRICKS_AI_SEARCH_INDEX`
 
 ## 3. Sync source to the workspace
+
+### AI observability configuration
+
+`app.yaml` enables tracing and passes these settings to the Databricks App:
+
+- `KEDB_OBSERVABILITY_ENABLED=true`
+- `AI_OBSERVABILITY_ENDPOINT=https://aiobs.tudoroprea.me/`
+- `AI_OBSERVABILITY_API_KEY` from the app secret resource `aiobs-api-key`
+
+Before deploying, store your platform project's ingest API key in a Databricks
+secret scope. Attach that secret to the app with resource name `aiobs-api-key`
+and READ permission, matching `valueFrom` in `app.yaml`. The key's value belongs
+in the secret, not in source control. `requirements.txt` includes the SDK.
+Change the endpoint in `app.yaml` if your platform URL changes.
 
 From PowerShell in this repository:
 

@@ -1,19 +1,18 @@
-import json
-from openai import OpenAI
+"""Model Serving through the native Databricks LangChain integration."""
+from kedb.observability import initialize
+
 
 class DatabricksModelServingProvider:
-    def __init__(self, *, base_url: str, token: str, model: str):
-        self.client = OpenAI(api_key=token, base_url=base_url.rstrip('/') + '/serving-endpoints')
+    def __init__(self, *, model: str, workspace_client=None):
+        initialize()
+        from databricks_langchain import ChatDatabricks
+
+        self.client = ChatDatabricks(
+            model=model, workspace_client=workspace_client, temperature=0,
+        )
         self.model = model
 
     def structured(self, *, system: str, user: str, schema):
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[{'role':'system','content':system},{'role':'user','content':user}],
-            response_format={
-                'type':'json_schema',
-                'json_schema': {'name': schema.__name__.lower(), 'schema': schema.model_json_schema()}
-            },
-            temperature=0,
-        )
-        return schema.model_validate(json.loads(response.choices[0].message.content))
+        runnable = self.client.with_structured_output(schema, method="json_schema")
+        result = runnable.invoke([("system", system), ("human", user)])
+        return schema.model_validate(result)

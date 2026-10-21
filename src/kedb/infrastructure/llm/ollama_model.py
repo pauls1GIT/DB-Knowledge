@@ -1,9 +1,12 @@
+from kedb.observability import initialize, traced_step
+
 import json
 from openai import OpenAI
 
 
 class OllamaModelProvider:
     def __init__(self, model: str = "llama3.2:3b"):
+        initialize()
         self.client = OpenAI(
             api_key="ollama",
             base_url="http://localhost:11434/v1",
@@ -11,6 +14,7 @@ class OllamaModelProvider:
         self.model = model
 
 
+    @traced_step("ollama_model.structured")
     def structured(self, *, system: str, user: str, schema):
         response = self.client.chat.completions.create(
             model=self.model,

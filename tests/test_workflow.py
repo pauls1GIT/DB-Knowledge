@@ -113,3 +113,35 @@ def test_rrf_missing_channel_and_duplicate_chunks():
     assert ranked[0]["known_error_id"] == "a"
     assert ranked[0]["final_score"] == pytest.approx(1 / 61 + 1 / 62)
     assert ranked[1]["final_score"] == pytest.approx(1 / 61)
+
+
+def test_api_facade_runs_langgraph_nodes_and_keeps_publication_separate():
+    from langchain_core.callbacks import BaseCallbackHandler
+    from langchain_core.tracers.context import register_configure_hook
+    from contextvars import ContextVar
+
+    class Recorder(BaseCallbackHandler):
+        def __init__(self):
+            self.nodes = []
+
+        def on_chain_start(self, serialized, inputs, **kwargs):
+            self.nodes.append(kwargs.get("name"))
+
+    recorder = Recorder()
+    callback = ContextVar("test_workflow_callback", default=None)
+    register_configure_hook(callback, inheritable=True)
+    token = callback.set(recorder)
+    published = []
+    try:
+        wf = workflow(publisher=lambda state: published.append(state) or {})
+        state = wf.start({"summary": "timeout"})
+        assert {"exact_search", "hybrid_search", "rerank_candidates"} <= set(recorder.nodes)
+        # Recreate the service as the API does on a later request / process restart.
+        resumed = workflow(publisher=lambda state: published.append(state) or {})
+        approved = resumed.apply_review(state, {"decision": "APPROVE", "reviewer": "tester"})
+        assert approved["status"] == "APPROVED_FOR_PUBLICATION"
+        assert published == []
+        assert resumed.publish(approved)["status"] == "PUBLISHED_PENDING_INDEX"
+        assert len(published) == 1
+    finally:
+        callback.reset(token)

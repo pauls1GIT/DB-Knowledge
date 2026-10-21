@@ -24,6 +24,7 @@ from kedb.application.dto import KnowledgeProposal
 from kedb.application.retrieval import RetrievalCoordinator
 from kedb.application.use_cases import PublishApprovedKnowledge, GenerateGroundedAnswer
 from kedb.config import Settings
+from kedb import observability
 from kedb.domain import HumanReview, JiraIssue, ReviewDecision
 from kedb.infrastructure.lakebase import Database, SqlRepositories
 from kedb.infrastructure.search.in_memory import InMemorySearch
@@ -38,6 +39,7 @@ chunk_worker = None
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     global startup_error, materializer, chunk_worker
+    observability.initialize(settings)
     try:
         db.create_all()
         db.ping()
@@ -65,6 +67,7 @@ async def lifespan(_app: FastAPI):
             chunk_worker.stop()
         if worker:
             worker.stop()
+        observability.shutdown()
 
 
 app = FastAPI(title="Known Error Curator", version="0.2.0", lifespan=lifespan)
@@ -385,18 +388,11 @@ def make_llm():
     if settings.databricks_model_endpoint:
         from kedb.infrastructure.llm.databricks_model import DatabricksModelServingProvider
 
-        host, token = settings.databricks_host, settings.databricks_token
-        if not host or not token:
-            from databricks.sdk import WorkspaceClient
-
-            workspace = WorkspaceClient()
-            host = workspace.config.host
-            token = workspace.config.authenticate()["Authorization"].removeprefix("Bearer ")
+        from kedb.infrastructure.databricks_auth import workspace_client
 
         return DatabricksModelServingProvider(
-            base_url=host,
-            token=token,
             model=settings.databricks_model_endpoint,
+            workspace_client=workspace_client(settings),
         )
 
     from kedb.infrastructure.llm.ollama_model import OllamaModelProvider

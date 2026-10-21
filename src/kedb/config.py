@@ -1,10 +1,14 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import SecretStr
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     kedb_env: str = "dev"
+    kedb_observability_enabled: bool = False
+    ai_observability_endpoint: str = ""
+    ai_observability_api_key: SecretStr = SecretStr("")
     # Local development only. In Databricks, attached Lakebase PG* variables
     # take precedence automatically.
     kedb_database_url: str = "sqlite+pysqlite:///./kedb-local.db"

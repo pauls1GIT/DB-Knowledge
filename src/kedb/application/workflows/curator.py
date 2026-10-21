@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any, TypedDict
 from uuid import UUID, uuid4
 
+from kedb.observability import execution
+
 from kedb.application.dto import EvaluationResult, KnowledgeProposal, RetrievalPlan
 
 
@@ -150,57 +152,42 @@ class CuratorWorkflow:
         return data
 
     # ------------------------------------------------------------------
-    # Backwards-compatible facade methods used by existing tests/callers.
-    # The actual visual graph uses the individual node methods below.
+    # API entry points execute compiled graphs. Persisted application state
+    # separates review from publication so database transaction ownership stays explicit.
     # ------------------------------------------------------------------
     def start(self, issue: dict, *, workflow_id: str | None = None) -> CuratorState:
+        workflow_id = workflow_id or str(uuid4())
+        with execution("known-error-curator", workflow_id):
+            return self._start(issue, workflow_id=workflow_id)
+
+    def _start(self, issue: dict, *, workflow_id: str | None = None) -> CuratorState:
         state: CuratorState = {"issue": issue, "workflow_id": workflow_id or str(uuid4())}
-        for node in (
-            self.retrieve_jira_fields,
-            self.extract_structured_error_information,
-        ):
-            state.update(node(state))
-        state.update(self.exact_search(state))
-        state.update(self.hybrid_search(state))
-        state.update(self.combine_candidates(state))
-        state.update(self.rerank_candidates(state))
-        state.update(self.suitable_known_error_found(state))
-        route = route_known_error(state)
-        if route == "reject":
-            state.update(self.reject(state))
-            return state
-        if route == "existing":
-            state.update(self.propose_existing_known_error(state))
-        else:
-            state.update(self.generate_new_known_error_candidate(state))
-        if state.get("automatic_create"):
-            state.update(self.automatic_approve(state))
-            state = self.publish(state)
-        return state
+        return build_langgraph(self, phase="start").invoke(
+            state, config={"configurable": {"thread_id": state["workflow_id"]}}
+        )
 
     def publish(self, state: CuratorState) -> CuratorState:
-        updated = dict(state)
-        for node in (self.publish_approved_knowledge, self.create_update_article_version,
-                     self.chunk_content, self.generate_embeddings, self.update_retrieval_index,
-                     self.available_for_future_jira):
-            updated.update(node(updated))
-        return updated
+        with execution("known-error-curator", state.get("workflow_id")):
+            return self._publish(state)
+
+    def _publish(self, state: CuratorState) -> CuratorState:
+        return build_langgraph(self, phase="publish").invoke(
+            state, config={"configurable": {"thread_id": state.get("workflow_id")}}
+        )
 
     def apply_review(self, state: CuratorState, review: dict) -> CuratorState:
+        with execution("known-error-curator", state.get("workflow_id")):
+            return self._apply_review(state, review)
+
+    def _apply_review(self, state: CuratorState, review: dict) -> CuratorState:
         if state.get("status") != "WAITING_FOR_REVIEW":
             raise ValueError("This workflow is not waiting for review")
         updated = dict(state)
         updated["review"] = review
-        decision = review.get("decision")
-        if decision == "APPROVE":
-            updated.update(self.approve(updated))
-        elif decision == "MODIFY":
-            updated.update(self.return_for_ai_revision(updated))
-        elif decision == "REJECT":
-            updated.update(self.reject(updated))
-        else:
-            raise ValueError("Unknown review decision")
-        return updated
+        route_review(updated)  # Validate before running graph nodes.
+        return build_langgraph(self, phase="review").invoke(
+            updated, config={"configurable": {"thread_id": state.get("workflow_id")}}
+        )
 
     # ------------------------------------------------------------------
     # LangGraph nodes
@@ -446,15 +433,33 @@ def route_review(state: CuratorState) -> str:
     raise ValueError(f"Unknown review decision: {decision}")
 
 
-def build_langgraph(workflow: CuratorWorkflow, *, checkpointer=None):
+def build_langgraph(workflow: CuratorWorkflow, *, checkpointer=None, phase: str = "interactive"):
+    """Build the shared topology for Studio or a durable API phase.
+
+    API review pauses are persisted by the caller in Lakebase. Approval returns
+    before publication so the caller can acquire its database lock and transaction.
+    Studio uses native interrupts and a caller-supplied LangGraph checkpointer.
+    """
     from langgraph.graph import END, START, StateGraph
 
+    if phase not in {"interactive", "start", "review", "publish"}:
+        raise ValueError(f"Unknown workflow phase: {phase}")
     graph = StateGraph(CuratorState)
 
     for node_name, _label, _kind in GRAPH_NODES:
-        graph.add_node(node_name, getattr(workflow, node_name))
+        # The API stores pending review in Lakebase; Studio uses native interrupts.
+        node = getattr(workflow, node_name)
+        if node_name == "human_review" and phase != "interactive":
+            node = lambda _state: {}
+        graph.add_node(node_name, node)
 
-    graph.add_edge(START, "retrieve_jira_fields")
+    if phase == "review":
+        graph.add_conditional_edges(START, route_review, {
+            "approve": "approve", "modify": "return_for_ai_revision", "reject": "reject",
+        })
+    else:
+        entry = "publish_approved_knowledge" if phase == "publish" else "retrieve_jira_fields"
+        graph.add_edge(START, entry)
     graph.add_edge("retrieve_jira_fields", "extract_structured_error_information")
 
     # Fan-out hybrid retrieval.
@@ -480,14 +485,15 @@ def build_langgraph(workflow: CuratorWorkflow, *, checkpointer=None):
     graph.add_edge("automatic_approve", "publish_approved_knowledge")
     graph.add_edge("reject", END)
 
-    graph.add_conditional_edges(
-        "human_review",
-        route_review,
-        {"approve": "approve", "modify": "return_for_ai_revision", "reject": "reject"},
-    )
+    if phase == "interactive":
+        graph.add_conditional_edges(
+            "human_review", route_review,
+            {"approve": "approve", "modify": "return_for_ai_revision", "reject": "reject"},
+        )
+    else:
+        graph.add_edge("human_review", END)
     graph.add_edge("return_for_ai_revision", "human_review")
-
-    graph.add_edge("approve", "publish_approved_knowledge")
+    graph.add_edge("approve", END if phase == "review" else "publish_approved_knowledge")
     graph.add_edge("publish_approved_knowledge", "create_update_article_version")
     graph.add_edge("create_update_article_version", "chunk_content")
     graph.add_edge("chunk_content", "generate_embeddings")

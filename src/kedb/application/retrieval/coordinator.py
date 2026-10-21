@@ -1,3 +1,5 @@
+from kedb.observability import traced_step
+
 import re
 from dataclasses import replace
 
@@ -19,6 +21,7 @@ class RetrievalCoordinator:
             )
         )
 
+    @traced_step("coordinator.search_port")
     def _search_port(self, query: str, *, query_type: str, top_k: int) -> list[RetrievalCandidate]:
         ids = self.identifiers(query)
         try:

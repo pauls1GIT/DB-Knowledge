@@ -11,9 +11,13 @@ from kedb.infrastructure.search.databricks_ai_search import DatabricksAISearch
 ])
 @pytest.mark.parametrize("workspace_url", ["https://workspace", "workspace", " https://workspace/ "])
 def test_search_authentication(monkeypatch, credentials, expected, workspace_url):
-    module = ModuleType('databricks.ai_search.client')
-    module.AISearchClient = Mock()
-    monkeypatch.setitem(sys.modules, 'databricks.ai_search.client', module)
+    module = ModuleType('databricks_langchain')
+    module.DatabricksVectorSearch = Mock()
+    monkeypatch.setitem(sys.modules, 'databricks_langchain', module)
     adapter = DatabricksAISearch('endpoint', 'catalog.schema.index', workspace_url=workspace_url, **credentials)
-    module.AISearchClient.assert_called_once_with(disable_notice=True, workspace_url='https://workspace', **expected)
-    adapter.client.get_index.assert_called_once_with(endpoint_name='endpoint', index_name='catalog.schema.index')
+    kwargs = module.DatabricksVectorSearch.call_args.kwargs
+    assert kwargs["client_args"] == dict(disable_notice=True, workspace_url="https://workspace", **expected)
+    assert kwargs["index_name"] == "catalog.schema.index"
+    # Managed embeddings infer the source column; explicitly passing it is rejected.
+    assert "text_column" not in kwargs
+    assert "status" in kwargs["columns"]

@@ -53,3 +53,11 @@ env:
   # Attach a READ secret resource named jira-webhook-token.
   - name: JIRA_WEBHOOK_TOKEN
     valueFrom: jira-webhook-token
+
+  - name: KEDB_OBSERVABILITY_ENABLED
+    value: "true"
+  - name: AI_OBSERVABILITY_ENDPOINT
+    value: "https://aiobs.tudoroprea.me/"
+  # Attach a READ secret resource named aiobs-api-key containing the ingest key.
+  - name: AI_OBSERVABILITY_API_KEY
+    valueFrom: aiobs-api-key

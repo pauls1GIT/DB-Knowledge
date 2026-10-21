@@ -1,3 +1,5 @@
+from kedb.observability import execution
+
 
 from kedb.application.dto import GroundedAnswer
 
@@ -13,6 +15,10 @@ class GenerateGroundedAnswer:
         history: list[dict] | None = None,
     ) -> GroundedAnswer:
 
+        with execution("grounded-answer"):
+            return self._execute(question, evidence, history)
+
+    def _execute(self, question, evidence, history):
         context = "\n\n".join(
             f"[{i}] {e['title']} v{e.get('version_number', '?')}\n{e['content']}"
             for i, e in enumerate(evidence, 1)

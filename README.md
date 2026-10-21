@@ -45,6 +45,66 @@ Open `http://localhost:8000`.
 
 Without Lakebase environment variables the backend uses `kedb-local.db` (SQLite) for local development only.
 
+## Databricks-native LangGraph workflow
+
+The API and background worker execute compiled LangGraph graphs. Retrieval branches
+run in parallel and join before ranking. Review and publication run as separate graph
+phases so review state remains durable in Lakebase and publication stays inside the
+API's database transaction. Existing pending reviews continue to work after restart.
+Studio retains its interactive LangGraph interrupt/resume flow.
+
+Model Serving uses `databricks_langchain.ChatDatabricks.with_structured_output`
+with Pydantic validation. The Databricks SDK supplies refreshable credentials,
+including the app's OAuth service principal. AI Search uses
+`databricks_langchain.DatabricksVectorSearch` against the existing managed-embedding
+index, preserving FULL_TEXT/ANN/HYBRID queries, published/current filters, and scores.
+The native search integration resolves the endpoint from the full index name.
+
+The existing `DATABRICKS_MODEL_ENDPOINT`, `DATABRICKS_AI_SEARCH_ENDPOINT`, and
+`DATABRICKS_AI_SEARCH_INDEX` settings and app resource permissions still apply.
+Publication continues to queue Delta materialization and managed indexing.
+Local Ollama and in-memory search remain available.
+
+Reference: [Databricks LangChain integration API](https://api-docs.databricks.com/python/databricks-ai-bridge/latest/databricks_langchain.html).
+
+## Optional AI observability
+
+Install the SDK into the backend environment with `pip install -e ".[observability]"`.
+The Databricks deployment includes the SDK in `requirements.txt` and enables
+tracing in `app.yaml`. Attach the `aiobs-api-key` secret resource before deploying;
+see `REDEPLOY.md`.
+
+Configure these environment variables (local `.env` is also supported):
+
+```dotenv
+KEDB_OBSERVABILITY_ENABLED=true
+AI_OBSERVABILITY_ENDPOINT=https://your-platform
+AI_OBSERVABILITY_API_KEY=your-project-ingest-key
+```
+
+Use your deployment's base URL; the SDK appends `/v1/traces`. Store the key in
+your deployment's secret manager. Telemetry is disabled by default locally.
+The API initializes the SDK before starting workers and flushes/shuts it down
+after stopping them. Standalone callers initialize lazily and use the SDK's
+exit flush; they can call `kedb.observability.shutdown()` explicitly.
+
+Curator start, review and publication reuse the persisted workflow ID, including
+background batch processing. Grounded answers get separate executions.
+Manual model-call and retrieval spans capture timing and exceptions without
+adding ticket text, questions or evidence to metadata. Prompt capture is disabled.
+The Databricks model uses native LangChain callbacks for model spans and token
+usage; costs depend on the backend's model pricing table. The local Ollama adapter
+uses an OpenAI-compatible client with manual spans, which do not supply token counts.
+The separate Studio graph relies
+on SDK LangGraph instrumentation when initialized by its host.
+
+To check your endpoint before enabling tracing, install
+`pip install "ai-observability-sdk[mock]==0.3.0"` and run
+`aiobs-mock --endpoint <platform-base-url> --api-key <ingest-key>`.
+Then process a ticket and inspect Engineering for `known-error-curator`.
+For export diagnostics in the backend process, use
+`ai_observability.export_stats()`; failed final flushes also produce a warning.
+
 ## Tests
 
 ```bash
