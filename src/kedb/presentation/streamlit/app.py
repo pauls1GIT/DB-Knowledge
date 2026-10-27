@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import json
+import base64
 from importlib.resources import files
 
 import pandas as pd
@@ -25,6 +26,9 @@ st.markdown("""
 }
 [data-testid="stSidebar"] { background: var(--secondary-background-color); border-right: 1px solid var(--workspace-border); }
 [data-testid="stSidebar"] h2 { color: var(--workspace-accent); font-size: 1.4rem; }
+.sidebar-brand { display: flex; align-items: center; gap: .65rem; }
+.sidebar-brand img { width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; }
+[data-testid="stSidebar"] .sidebar-brand h2 { margin: 0; padding: 0; font-size: 1.7rem; line-height: 1.15; }
 [data-testid="stSidebar"] [role="radiogroup"] { gap: .4rem; }
 [data-testid="stSidebar"] [role="radiogroup"] label {
     padding: .6rem .75rem; border-radius: 6px;
@@ -495,8 +499,14 @@ def toggle_completion_sound():
 
 
 with st.sidebar:
-    st.markdown("## Knowledge Hub")
-    st.caption("KNOWN ERROR DATABASE")
+    sidebar_icon = base64.b64encode(
+        files("kedb.presentation.streamlit").joinpath("assets/KEDB_transparent.png").read_bytes()
+    ).decode("ascii")
+    st.markdown(
+        f'<div class="sidebar-brand"><img src="data:image/png;base64,{sidebar_icon}" '
+        'alt=""><h2>Known Error Database</h2></div>',
+        unsafe_allow_html=True,
+    )
     st.divider()
     menu = st.radio("Workspace", ["KEDB", "Status", "Workflow Graph"],
                     format_func=lambda item: {"KEDB": "Knowledge", "Status": "Deployment status",
