@@ -63,6 +63,39 @@ class RetrievalCoordinator:
         return [replace(c, final_score=c.search_score, rank=i + 1)
                 for i, c in enumerate(list(unique.values())[:top_k])]
 
+    @traced_step("coordinator.search_by_fields")
+    def search_by_fields(
+        self, identifier_query: str, description_query: str, top_k: int = 5
+    ) -> list[RetrievalCandidate]:
+        identifier_query = identifier_query.strip()
+        description_query = description_query.strip()
+        if not identifier_query and not description_query:
+            return []
+
+        exact = {}
+        for identifier in self.identifiers(identifier_query):
+            for candidate in self.exact_search(identifier, top_k):
+                key = (candidate.known_error_id, candidate.article_version_id)
+                exact.setdefault(key, candidate)
+        exact_results = list(exact.values())[:top_k]
+        if not description_query:
+            return [replace(c, rank=i + 1) for i, c in enumerate(exact_results)]
+
+        description_results = self.search(description_query, top_k)
+        if not identifier_query:
+            return description_results
+
+        # Reciprocal rank fusion rewards articles returned by both searches.
+        candidates, scores = {}, {}
+        for rows in (exact_results, description_results):
+            for position, candidate in enumerate(rows, start=1):
+                key = (candidate.known_error_id, candidate.article_version_id)
+                candidates.setdefault(key, candidate)
+                scores[key] = scores.get(key, 0.0) + 1.0 / (60 + position)
+        ranked = sorted(scores, key=scores.get, reverse=True)[:top_k]
+        return [replace(candidates[key], final_score=scores[key], rank=i + 1)
+                for i, key in enumerate(ranked)]
+
     def search(self, query: str, top_k: int = 5) -> list[RetrievalCandidate]:
         merged = {}
         for channel, rows in (("lexical_score", self.full_text_search(query, top_k)),

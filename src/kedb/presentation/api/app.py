@@ -308,14 +308,20 @@ def resolve_ticket(body: ResolveTicketIn):
 
 @app.post("/api/kedb/search")
 def search_kedb(body: ResolveTicketIn):
-    return retrieve_ticket_candidates(body, hybrid=True)
+    return retrieve_ticket_candidates(body, by_fields=True)
 
 
-def retrieve_ticket_candidates(body: ResolveTicketIn, *, hybrid=False):
+def retrieve_ticket_candidates(body: ResolveTicketIn, *, by_fields=False):
     query = f"{body.summary}\n{body.description}"
 
     retriever = RetrievalCoordinator(make_search_adapter())
-    candidates = (retriever.hybrid_search if hybrid else retriever.search)(query, settings.kedb_search_top_k)
+    if by_fields:
+        candidates = retriever.search_by_fields(
+            body.summary, body.description, settings.kedb_search_top_k
+        )
+        query = {"identifier": body.summary.strip(), "description": body.description.strip()}
+    else:
+        candidates = retriever.search(query, settings.kedb_search_top_k)
     # AI Search indexes chunks; load the complete published resolution from Lakebase.
     results = []
     with db.sessions() as session:
@@ -328,7 +334,7 @@ def retrieve_ticket_candidates(body: ResolveTicketIn, *, hybrid=False):
                 result["root_cause"] = version.root_cause
                 if not result["resolution"]:
                     result["resolution"] = version.solution
-            if hybrid:
+            if by_fields:
                 for field in ("lexical_score", "vector_score", "exact_score", "search_score"):
                     result.pop(field, None)
             results.append(result)

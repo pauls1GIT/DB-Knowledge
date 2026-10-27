@@ -112,13 +112,18 @@ def test_resolve_loads_published_resolution_for_index_results(monkeypatch):
     assert client.post("/api/tickets/resolve", json=body).json()["candidates"][0]["resolution"] == ""
 
 
-def test_search_tab_uses_backend_hybrid_score_only(monkeypatch):
+@pytest.mark.parametrize("identifier, description, expected_calls", [
+    ("ORA-12170", "", ["FULL_TEXT"]),
+    ("", "Timeout", ["FULL_TEXT", "ANN"]),
+    ("ORA-12170", "Timeout", ["FULL_TEXT", "FULL_TEXT", "ANN"]),
+])
+def test_search_tab_routes_fields_and_loads_resolution(monkeypatch, identifier, description, expected_calls):
     from contextlib import nullcontext
     from types import SimpleNamespace
     from kedb.domain import RetrievalCandidate, ArticleStatus
     calls = []
     candidate = RetrievalCandidate(known_error_id=uuid4(), article_version_id=uuid4(),
-                                   title="Match", search_score=0.87)
+                                   title="Match", search_score=0.87, exact_score=1.0)
     class Search:
         def search(self, query, identifiers, **kwargs):
             calls.append(kwargs['query_type'])
@@ -128,12 +133,13 @@ def test_search_tab_uses_backend_hybrid_score_only(monkeypatch):
     version = SimpleNamespace(status=ArticleStatus.PUBLISHED, solution='Fix', root_cause='Cause')
     monkeypatch.setattr(api_module, 'SqlRepositories', lambda session: SimpleNamespace(get_version=lambda key: version))
     client = TestClient(api_module.app)
-    response = client.post('/api/kedb/search', json={'summary': 'Timeout', 'description': ''})
+    response = client.post('/api/kedb/search', json={'summary': identifier, 'description': description})
     assert response.status_code == 200
     rows = response.json()['candidates']
-    assert calls == ['HYBRID']
+    assert calls == expected_calls
+    assert response.json()['query'] == {'identifier': identifier, 'description': description}
     assert len(rows) == 1
-    assert rows[0]['final_score'] == 0.87
+    assert rows[0]['final_score'] == pytest.approx(2 / 61 if identifier and description else 1.0 if identifier else 0.87)
     assert rows[0]['root_cause'] == 'Cause'
     assert rows[0]['resolution'] == 'Fix'
     assert not {'lexical_score', 'vector_score', 'search_score', 'exact_score'} & rows[0].keys()

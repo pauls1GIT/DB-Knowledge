@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import json
+from importlib.resources import files
 
 import pandas as pd
 import requests
@@ -12,9 +13,56 @@ from kedb.application.workflows.curator import GRAPH_EDGES, GRAPH_NODES, workflo
 API = os.getenv("KEDB_API_URL", "http://127.0.0.1:8001").rstrip("/")
 DEFAULT_REVIEWER = os.getenv("KEDB_DEFAULT_REVIEWER", "human-reviewer")
 
-st.set_page_config(page_title="Known Error Curator", page_icon="â–¶", layout="wide")
-st.title("Known Error DB Curator")
-st.caption("Process tickets in the background and review proposals as they arrive.")
+st.set_page_config(page_title="Known Error Curator", page_icon="📘", layout="wide")
+
+# Snowsight-inspired workspace with Atos blue and neutral surfaces.
+st.markdown("""
+<style>
+:root { --atos-blue: #0073e6; }
+[data-testid="stAppViewContainer"] {
+    --workspace-border: color-mix(in srgb, var(--text-color) 20%, transparent);
+    --workspace-accent: color-mix(in srgb, var(--atos-blue) 75%, var(--text-color));
+}
+[data-testid="stSidebar"] { background: var(--secondary-background-color); border-right: 1px solid var(--workspace-border); }
+[data-testid="stSidebar"] h2 { color: var(--workspace-accent); font-size: 1.4rem; }
+[data-testid="stSidebar"] [role="radiogroup"] { gap: .4rem; }
+[data-testid="stSidebar"] [role="radiogroup"] label {
+    padding: .6rem .75rem; border-radius: 6px;
+}
+[data-testid="stSidebar"] [role="radiogroup"] label:has(input:checked) {
+    background: color-mix(in srgb, var(--atos-blue) 16%, transparent);
+    color: var(--text-color); font-weight: 600;
+}
+.block-container { padding-top: 4.5rem; padding-bottom: 3rem; max-width: 1600px; }
+h1 { font-size: 1.85rem !important; font-weight: 600 !important; letter-spacing: -.035rem; }
+h2, h3 { font-weight: 600 !important; }
+[data-testid="stCaptionContainer"] { color: color-mix(in srgb, var(--text-color) 75%, transparent); }
+[data-baseweb="tab-list"] { gap: 1.5rem; border-bottom: 1px solid var(--workspace-border); }
+[data-baseweb="tab"] { padding: .7rem .1rem; }
+[data-baseweb="tab"][aria-selected="true"] { color: var(--workspace-accent); }
+[data-baseweb="tab-highlight"] { background-color: var(--atos-blue); }
+[data-testid="stBaseButton-primary"], [data-testid="stBaseButton-primaryFormSubmit"] {
+    background: var(--atos-blue); border-color: var(--atos-blue); color: white;
+}
+[data-testid="stBaseButton-primary"]:hover,
+[data-testid="stBaseButton-primaryFormSubmit"]:hover { background: #005bb5; border-color: #005bb5; }
+[data-testid="stMetric"] {
+    background: var(--secondary-background-color); border: 1px solid var(--workspace-border);
+    border-radius: 8px; padding: 1rem;
+}
+[data-testid="stDataFrame"] { border: 1px solid var(--workspace-border); border-radius: 8px; }
+/* Completion audio plays without a visible player or layout space. */
+[data-testid="stElementContainer"]:has([data-testid="stAudio"]) { display: none; }
+[data-testid="stAudio"] { display: none; }
+@media (max-width: 700px) {
+    .block-container { padding: 4.5rem 1rem 2rem; }
+    [data-baseweb="tab-list"] { gap: .75rem; }
+}
+</style>
+""", unsafe_allow_html=True)
+st.caption("KNOWLEDGE WORKSPACE")
+st.title("Known Error Database")
+st.caption("Find proven solutions. Review new knowledge. Resolve incidents faster.")
 
 
 def api(method: str, path: str, **kwargs):
@@ -56,7 +104,8 @@ def candidate_frame(candidates, *, review=False):
     return pd.DataFrame(rows)
 
 
-@st.fragment(run_every=3)
+# Allow the four-second completion sound to finish before the next refresh.
+@st.fragment(run_every=5)
 def render_incident_review():
     st.subheader("Incident Review")
     source = st.radio("Input source", ["JSON", "Jira API"], horizontal=True)
@@ -69,7 +118,9 @@ def render_incident_review():
         if jql.strip():
             payload["jql"] = jql.strip()
         st.caption("Uses Jira Cloud credentials configured on the server.")
-    play, pause, resume = st.columns([1, 1, 4])
+    # Use columns for compatibility with older deployed Streamlit runtimes.
+    action_group, _ = st.columns([2, 3])
+    play, pause, resume = action_group.columns([1, 1, 2], gap="small")
     if play.button("Play", type="primary"):
         valid = True
         if uploaded is not None:
@@ -83,6 +134,7 @@ def render_incident_review():
         started = api("POST", "/api/batches/play", json=payload) if valid else None
         if started:
             st.session_state["batch_id"] = started["batch_id"]
+            st.session_state.setdefault("observed_active_batches", set()).add(started["batch_id"])
     batch_id = st.session_state.get("batch_id")
     batch = api("GET", f"/api/batches/{batch_id}" if batch_id else "/api/batches/current")
     if batch:
@@ -96,6 +148,15 @@ def render_incident_review():
     if not batch:
         st.info("Press Play to process the selected input in the background. Tickets needing review will appear here.")
         return
+    active_batches = st.session_state.setdefault("observed_active_batches", set())
+    notified_batches = st.session_state.setdefault("completion_notified_batches", set())
+    if batch["status"] != "COMPLETE":
+        active_batches.add(batch["batch_id"])
+    elif batch["batch_id"] not in notified_batches:
+        notified_batches.add(batch["batch_id"])
+        if batch["batch_id"] in active_batches and st.session_state.get("completion_sound", True):
+            sound = files("kedb.presentation.streamlit").joinpath("assets/duolingo-correct.mp3")
+            st.audio(sound.read_bytes(), format="audio/mpeg", autoplay=True)
     st.caption(f"Source: `{batch['source']}`")
     st.progress(batch["processed"] / max(batch["total"], 1),
                 text=f"Prepared {batch['processed']} of {batch['total']} tickets")
@@ -256,25 +317,29 @@ def render_resolve_ticket() -> None:
 def render_search_kedb() -> None:
     st.subheader("Search KEDB")
     st.caption(
-        "Search published knowledge with Databricks hybrid keyword and vector ranking. Database fallback uses keyword matching."
+        "Search published knowledge using error codes, natural-language descriptions, or both. "
+        "Database fallback uses keyword matching."
     )
-    summary = st.text_input(
-        "Search summary",
-        placeholder="e.g. Oracle application connection times out",
-    )
-    description = st.text_area(
-    "Search description",
-    placeholder="Describe the problem, symptoms, error messages, etc.",
-    )
-    if st.button("Search KEDB", type="primary"):
-        if not summary.strip() and not description.strip():
-            st.warning("Enter a search summary or description.")
+    with st.form("kedb_search", border=True):
+        identifier = st.text_input(
+            "Error code / technical identifier",
+            placeholder="e.g. ORA-12170 or HTTP 403",
+        )
+        description = st.text_area(
+            "Describe your issue",
+            placeholder="e.g. My Oracle database connection keeps timing out.",
+        )
+        submitted = st.form_submit_button("Search KEDB", type="primary")
+
+    if submitted:
+        if not identifier.strip() and not description.strip():
+            st.warning("Enter an error code or describe your issue.")
         else:
             result = api(
                 "POST",
                 "/api/kedb/search",
                 json={
-                    "summary": summary,
+                    "summary": identifier,
                     "description": description,
                 },
             )
@@ -283,9 +348,12 @@ def render_search_kedb() -> None:
 
     candidates = st.session_state.get("hybrid_search_candidates")
 
-    if candidates is not None:
+    if candidates is None:
+        st.info("Search by error code, describe the symptoms, or use both to find published solutions.")
+    else:
         if candidates:
-            st.success("Relevant KEDB knowledge found.")
+            st.subheader("Search results")
+            st.caption(f"{len(candidates)} matching articles ? Ranked by relevance")
 
             st.dataframe(
                 candidate_frame(candidates),
@@ -373,7 +441,8 @@ def render_status() -> None:
         if chunks.get("last_error"):
             st.error(f"Article chunk materialization: {chunks['last_error']}")
         if chunks:
-            st.metric("Publications waiting for chunks / sync", chunks.get("pending_publications") or 0)
+            pending = chunks.get("pending_publications")
+            st.metric("Publications waiting for chunks / sync", pending if pending is not None else "Unknown")
         st.caption("Rebuild search data from current published articles. Processing runs in the background; search becomes available after index sync completes.")
         if st.button("Rebuild search index", disabled=not (
             status.get("database_ready") and chunks.get("worker_running") and chunks.get("index")
@@ -383,13 +452,64 @@ def render_status() -> None:
                 st.success(f"Queued {result['articles_queued']} published article(s) for rebuilding. Refresh status to check progress.")
         if st.button("Refresh status"):
             st.rerun()
-        st.json(status)
+        st.subheader("Deployment details")
+        labels = {
+            "status": "API status", "database": "Database type",
+            "database_ready": "Database ready", "ai_search_configured": "AI Search configured",
+            "error": "Database startup error", "article_chunks": "Article publishing",
+            "table": "Article chunks table", "index": "Search index",
+            "warehouse_configured": "SQL warehouse configured",
+            "worker_running": "Publishing worker running",
+            "pending_publications": "Publications awaiting processing",
+            "last_error": "Last publishing error",
+            "configuration_required": "Configuration needed",
+        }
+        rows = []
+
+        def add_rows(values, section="General"):
+            for key, value in values.items():
+                label = labels.get(key, key.replace("_", " ").capitalize())
+                if isinstance(value, dict):
+                    add_rows(value, label if section == "General" else f"{section} / {label}")
+                    continue
+                if value is None or value == "":
+                    display = "None" if key in {"error", "last_error", "configuration_required"} else "Not available"
+                elif isinstance(value, bool):
+                    display = "Yes" if value else "No"
+                elif key == "status":
+                    display = {"ok": "Healthy", "degraded": "Needs attention"}.get(value, str(value))
+                elif key == "database":
+                    display = {"lakebase": "Lakebase (PostgreSQL)", "sqlite": "SQLite (local)"}.get(value, str(value))
+                elif isinstance(value, list):
+                    display = ", ".join(str(item) for item in value) or "None"
+                else:
+                    display = str(value)
+                rows.append({"Section": section, "Setting": label, "Value": display})
+
+        add_rows(status)
+        st.table(pd.DataFrame(rows).set_index(["Section", "Setting"]))
+
+
+def toggle_completion_sound():
+    st.session_state["completion_sound"] = not st.session_state.get("completion_sound", True)
 
 
 with st.sidebar:
-    menu = st.radio("Main menu", ["KEDB", "Status", "Workflow Graph"])
-    st.markdown("**About KEDB**")
-    st.markdown('Welcome to the Known Error Database curator!.  \nThe application collects knowledge from resolved incidents. Each article describes a known problem.  \n-Root causes explain why it happened.  \n-Solutions capture how it was resolved.  \n-Search helps find relevant past issues.  \n-Keyword matching finds shared terms.  \n-Semantic search finds similar meanings.  \nThe curator prepares knowledge proposals.  \nReviewers can approve, modify, or reject them.  \nApproved articles become reusable knowledge.  \nNew versions preserve article history.  \nResolve Ticket answers from saved knowledge.  \nManage Tickets starts incident processing.  \nReuse proven solutions to resolve issues faster.')
+    st.markdown("## Knowledge Hub")
+    st.caption("KNOWN ERROR DATABASE")
+    st.divider()
+    menu = st.radio("Workspace", ["KEDB", "Status", "Workflow Graph"],
+                    format_func=lambda item: {"KEDB": "Knowledge", "Status": "Deployment status",
+                                              "Workflow Graph": "Workflow graph"}[item])
+    st.divider()
+    sound_enabled = st.session_state.get("completion_sound", True)
+    st.button("🔊" if sound_enabled else "🔇", key="toggle_completion_sound",
+              help="Mute completion sound" if sound_enabled else "Enable completion sound",
+              on_click=toggle_completion_sound)
+    with st.expander("About this workspace"):
+        st.write("Turn resolved incidents into reusable knowledge. Review proposals, find known errors, "
+                 "and use published solutions to resolve new tickets.")
+        st.caption("Approved articles retain their version history.")
 
 if menu == "Status":
     render_status()
@@ -442,13 +562,3 @@ else:
                     if started:
                         st.session_state["batch_id"] = started["batch_id"]
                         st.success("Batch queued. Open Incident Review to follow progress and approve proposals.")
-
-        tickets = api("GET", "/api/jira/issues") or []
-        if tickets:
-            selected = st.selectbox("Ticket to delete", tickets,
-                                    format_func=lambda t: f"{t['external_key']}: {t['summary']}")
-            confirm = st.checkbox("Delete this ticket from the curator database")
-            st.caption("This does not delete the original Jira issue. Tickets linked to published knowledge are retained.")
-            if st.button("Delete ticket", disabled=not confirm):
-                if api("DELETE", f"/api/jira/issues/{selected['id']}"):
-                    st.rerun()
