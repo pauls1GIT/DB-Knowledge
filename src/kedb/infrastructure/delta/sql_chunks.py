@@ -68,5 +68,20 @@ class SqlChunkSink:
         """, params)
 
     def sync(self):
+        from databricks.sdk.errors import BadRequest
+
         if self.index_name:
-            self.workspace.vector_search_indexes.sync_index(index_name=self.index_name)
+            try:
+                self.workspace.vector_search_indexes.sync_index(index_name=self.index_name)
+            except BadRequest as exc:
+                # An existing sync may predate our write. Defer rather than claiming
+                # that it includes these chunks, or swallowing unrelated failures.
+                message = str(exc)
+                state = re.search(r"Pipeline is in state ([A-Z_]+)\b", message)
+                if ("Index is not ready to sync yet" in message
+                        and state is not None
+                        and state.group(1) not in {"COMPLETED", "FAILED", "CANCELED"}
+                        and "following states to sync: COMPLETED, FAILED, CANCELED" in message):
+                    return False
+                raise
+        return True

@@ -11,10 +11,14 @@ def test_play_keeps_background_running_and_advances_reviews(tmp_path, monkeypatc
     state = {"workflow_id": "wf", "status": "WAITING_FOR_REVIEW",
              "issue": {"external_key": "T-1", "summary": "Timeout", "description": "Failed", "resolution": "Retry"},
              "proposal": {"action": "CREATE", "title": "AI title", "problem": "AI problem", "solution": "AI solution"},
-             "evaluation": {"reasoning": "Needs review"}}
+             "evaluation": {"reasoning": "Needs review", "cosine_score": .75,
+                            "auto_approve_threshold": .6, "duplicate_threshold": .9,
+                            "decision": "HUMAN_REVIEW"}}
     item = {"workflow_id": "wf", "external_key": "T-1", "summary": "Timeout", "status": "WAITING_FOR_REVIEW"}
     batch = {"batch_id": "batch", "source": "data/tickets_clean.csv", "status": "RUNNING",
-             "processed": 1, "total": 5, "waiting": [item], "results": [item], "error": None}
+             "processed": 1, "total": 5, "waiting": [item], "results": [item], "error": None,
+             "tickets": [{"external_key": "T-2", "summary": "Another", "status": "PROCESSING",
+                          "current_step": "Cosine Similarity", "updated_at": None}]}
     started = False
     calls = []
     class Response:
@@ -45,6 +49,10 @@ def test_play_keeps_background_running_and_advances_reviews(tmp_path, monkeypatc
     next(button for button in app.button if button.label == "Play").click().run()
     assert not app.exception
     assert any(metric.value == "RUNNING" for metric in app.metric)
+    assert any("current_step" in frame.value.columns and "Cosine Similarity" in frame.value["current_step"].values
+               for frame in app.dataframe)
+    assert any(metric.label == "Highest cosine similarity" and metric.value == "0.750000"
+               for metric in app.metric)
     assert not any(control.label in {"Action", "Root cause", "Ingest only"}
                    for control in [*app.selectbox, *app.text_area, *app.button])
     next(control for control in app.selectbox if control.label == "Review decision").select("REJECT")
@@ -56,6 +64,7 @@ def test_play_keeps_background_running_and_advances_reviews(tmp_path, monkeypatc
     app.run()
     assert not app.exception
     assert len(app.get("audio")) == int(sound_enabled)
+
     assert "batch" in app.session_state["completion_notified_batches"]
     app.run()
     assert not app.get("audio")
@@ -71,3 +80,44 @@ def test_play_keeps_background_running_and_advances_reviews(tmp_path, monkeypatc
     app.run()
     assert not app.exception
     assert len(app.get("audio")) == int(sound_enabled)
+
+
+def test_completed_duplicate_displays_cosine_and_threshold(monkeypatch):
+    import requests
+    item = {"workflow_id": "wf", "external_key": "T-1", "summary": "Timeout", "status": "REJECTED",
+            "cosine_score": .95, "duplicate_threshold": .9}
+    batch = {"batch_id": "b", "source": "test", "status": "COMPLETE", "processed": 1,
+             "total": 1, "waiting": [], "results": [item], "error": None}
+    state = {"status": "REJECTED", "evaluation": {"cosine_score": .95, "duplicate_threshold": .9, "auto_approve_threshold": .6,
+             "reasoning": "Duplicate rejected"}, "candidates": [{"known_error_id": "k",
+             "article_version_id": "v", "title": "Existing article", "root_cause": "Cause",
+             "cosine_score": .95, "rank": 1}]}
+
+    class Response:
+        ok = True
+
+        def __init__(self, data):
+            self.data = data
+
+        def json(self):
+            return self.data
+
+    def request(method, url, **kwargs):
+        if url.endswith("/jira/issues"):
+            return Response([])
+        if url.endswith("/status"):
+            return Response({"status": "ok"})
+        if url.endswith("/current"):
+            return Response(batch)
+        if url.endswith("/workflows/wf"):
+            return Response(state)
+        raise AssertionError(url)
+
+    monkeypatch.setattr(requests, "request", request)
+    app = AppTest.from_file(Path("src/kedb/presentation/streamlit/app.py").resolve()).run()
+    assert not app.exception
+    metrics = {metric.label: metric.value for metric in app.metric}
+    assert metrics["Highest cosine similarity"] == "0.950000"
+    assert metrics["Reject at or above"] == "0.900000"
+    assert metrics["Approve below"] == "0.600000"
+    assert any("cosine_score" in frame.value.columns for frame in app.dataframe)

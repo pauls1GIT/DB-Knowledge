@@ -91,7 +91,7 @@ def candidate_frame(candidates, *, review=False):
             version = next((v for v in versions if str(v["id"]) == str(row.get("article_version_id"))), {})
             row["root_cause"] = version.get("root_cause") or "Not recorded"
         row["root_cause"] = row.get("root_cause") or "Not recorded"
-        if review and ("exact_rank" in candidate or "hybrid_rank" in candidate):
+        if review:
             row = {
                 "rank": candidate.get("rank"),
                 "title": candidate.get("title"),
@@ -100,7 +100,7 @@ def candidate_frame(candidates, *, review=False):
                 "exact_rank": candidate.get("exact_rank"),
                 "hybrid_rank": candidate.get("hybrid_rank"),
                 "hybrid_score": candidate.get("hybrid_score"),
-                "final_score": candidate.get("final_score"),
+                "cosine_score": candidate.get("cosine_score"),
                 "known_error_id": candidate.get("known_error_id"),
                 "article_version_id": candidate.get("article_version_id"),
             }
@@ -169,6 +169,14 @@ def render_incident_review():
     c1.metric("Ready for review", len(waiting))
     c2.metric("Finished", batch["processed"] - len(waiting))
     c3.metric("Background processing", batch["status"])
+    if batch.get("tickets"):
+        st.subheader("Ticket progress")
+        st.caption("Refreshes every 5 seconds. Parallel steps are shown together. A sync request does not mean indexing has finished.")
+        st.dataframe(pd.DataFrame(batch["tickets"]), hide_index=True,
+                     column_order=["external_key", "summary", "status", "current_step", "updated_at"],
+                     column_config={"external_key": "Ticket", "summary": "Summary", "status": "Status",
+                                    "current_step": "Current step", "updated_at": "Last step update (UTC)"},
+                     use_container_width=True)
     seen = st.session_state.setdefault("seen_workflows", set())
     new_ids = {item["workflow_id"] for item in waiting} - seen
     if new_ids:
@@ -212,20 +220,19 @@ def render_incident_review():
                 st.markdown(f"**{label}**")
                 st.write(proposal[key])
             st.caption(state["evaluation"].get("reasoning", ""))
+            evaluation = state["evaluation"]
+            if evaluation.get("cosine_score") is not None:
+                st.metric("Highest cosine similarity", f"{evaluation['cosine_score']:.6f}")
+                st.caption(f"Approve below {evaluation.get('auto_approve_threshold', 'N/A')}; "
+                           f"reject at or above {evaluation.get('duplicate_threshold', 'N/A')}; "
+                           "scores between these cutoffs require human review.")
         if state.get("candidates"):
             with st.expander("Search scores"):
-                if any("exact_rank" in c or "hybrid_rank" in c for c in state["candidates"]):
-                    st.caption("Exact match triggers automatic rejection. Final score combines exact and hybrid ranks using RRF (k=60); a missing channel contributes zero.")
-                    columns = {
-                        "exact_match": st.column_config.CheckboxColumn("Exact match"),
-                        "exact_rank": st.column_config.NumberColumn("Exact rank", format="%d"),
-                        "hybrid_rank": st.column_config.NumberColumn("Hybrid rank", format="%d"),
-                        "hybrid_score": st.column_config.NumberColumn("Hybrid score", format="%.3f"),
-                        "final_score": st.column_config.NumberColumn("Final RRF score", format="%.3f"),
-                    }
-                else:
-                    st.caption("Saved results from the previous scoring method.")
-                    columns = {}
+                st.caption("Cosine similarity determines duplication. Exact and hybrid matches provide retrieval context only.")
+                columns = {
+                    "exact_match": st.column_config.CheckboxColumn("Exact error-code match"),
+                    "cosine_score": st.column_config.NumberColumn("Cosine similarity", format="%.6f"),
+                }
                 st.dataframe(candidate_frame(state["candidates"], review=True),
                              column_config=columns, hide_index=True)
         with st.form(f"review-{state['workflow_id']}-{state.get('revision_count', 0)}"):
@@ -250,6 +257,24 @@ def render_incident_review():
             st.dataframe(report, hide_index=True)
             st.download_button("Download results CSV", report.to_csv(index=False).encode(),
                                "kedb_review_results.csv", "text/csv")
+            options = {r["workflow_id"]: f"{r['external_key']} ? {r['status']}" for r in batch["results"]}
+            selected_result = st.selectbox("Inspect duplication decision", list(options), format_func=options.get)
+            completed = api("GET", f"/api/workflows/{selected_result}")
+            if completed:
+                evaluation = completed.get("evaluation", {})
+                score = evaluation.get("cosine_score")
+                threshold = evaluation.get("duplicate_threshold")
+                approval = evaluation.get("auto_approve_threshold")
+                left, middle, right = st.columns(3)
+                left.metric("Highest cosine similarity", f"{score:.6f}" if score is not None else "N/A")
+                middle.metric("Approve below", f"{approval:.6f}" if approval is not None else "N/A")
+                right.metric("Reject at or above", f"{threshold:.6f}" if threshold is not None else "N/A")
+                st.caption(evaluation.get("reasoning", "Saved result predates cosine scoring."))
+                if completed.get("candidates"):
+                    st.dataframe(candidate_frame(completed["candidates"], review=True), hide_index=True,
+                                 column_config={"cosine_score": st.column_config.NumberColumn(
+                                     "Cosine similarity", format="%.6f")})
+
 
 
 def render_resolve_ticket() -> None:
@@ -406,12 +431,14 @@ def render_graph() -> None:
         st.markdown(
             """
             1. Jira fields are normalized and an LLM creates a structured retrieval plan.
-            2. Exact and hybrid searches run in parallel. Their rankings are combined using RRF (k=60).
-            3. An exact score of 1 automatically rejects. No matches automatically creates. Otherwise AI evaluation chooses reuse or a proposal for review.
-            4. Human review is a real LangGraph `interrupt()` node.
-            5. `MODIFY` requests AI revision and returns to human review.
-            6. `REJECT` ends the ticket without publishing.
-            7. Human approval or the no-match policy permits publication. The outbox schedules index materialization.
+            2. Exact and hybrid searches run in parallel; their candidates are merged without rank fusion.
+            3. An article draft is generated and compared with current published articles using cosine similarity.
+            4. Scores below the approval cutoff auto-approve; scores at or above the rejection cutoff reject.
+               Scores between the cutoffs require human review.
+            5. Human review pauses until Approve, Modify, or Reject is submitted.
+            6. `MODIFY` requests AI revision and returns to human review.
+            7. `REJECT` ends the ticket without publishing.
+            8. The cosine policy permits publication. The outbox schedules index materialization.
             """
         )
 

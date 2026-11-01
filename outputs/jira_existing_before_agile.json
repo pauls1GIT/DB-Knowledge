@@ -1,0 +1,2006 @@
+[
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10048",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10048",
+    "key": "PROBLEM-1",
+    "fields": {
+      "summary": "Account locked after password change",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10001"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10049",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10049",
+    "key": "PROBLEM-2",
+    "fields": {
+      "summary": "USB drive triggered security alert",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10002"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10050",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10050",
+    "key": "PROBLEM-3",
+    "fields": {
+      "summary": "Need more RAM \u2014 computer too slow with current workload",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10003"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10051",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10051",
+    "key": "PROBLEM-4",
+    "fields": {
+      "summary": "Need to resize VM \u2014 running out of resources",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10004"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10052",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10052",
+    "key": "PROBLEM-5",
+    "fields": {
+      "summary": "Need more RAM \u2014 computer too slow with current workload",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10005"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10053",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10053",
+    "key": "PROBLEM-6",
+    "fields": {
+      "summary": "Can't install Salesforce \u2014 access denied",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10006"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10054",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10054",
+    "key": "PROBLEM-7",
+    "fields": {
+      "summary": "Calendar showing wrong time zone",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10007"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10055",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10055",
+    "key": "PROBLEM-8",
+    "fields": {
+      "summary": "Desktop making loud grinding noise",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10008"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10056",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10056",
+    "key": "PROBLEM-9",
+    "fields": {
+      "summary": "Desktop not connecting to network after move",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10009"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10057",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10057",
+    "key": "PROBLEM-10",
+    "fields": {
+      "summary": "Forgot my password",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10010"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10058",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10058",
+    "key": "PROBLEM-11",
+    "fields": {
+      "summary": "Outlook won't open \u2014 stuck on loading profile",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10011"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10059",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10059",
+    "key": "PROBLEM-12",
+    "fields": {
+      "summary": "Database CPU at 100% during business hours",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10012"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10060",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10060",
+    "key": "PROBLEM-13",
+    "fields": {
+      "summary": "Need contractor account",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10013"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10061",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10061",
+    "key": "PROBLEM-14",
+    "fields": {
+      "summary": "Laptop overheating and shutting down",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10014"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10062",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10062",
+    "key": "PROBLEM-15",
+    "fields": {
+      "summary": "Received suspicious email \u2014 possible phishing",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10015"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10063",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10063",
+    "key": "PROBLEM-16",
+    "fields": {
+      "summary": "Multiple users locked out simultaneously",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10016"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10064",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10064",
+    "key": "PROBLEM-17",
+    "fields": {
+      "summary": "Specific application very slow over network",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10017"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10065",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10065",
+    "key": "PROBLEM-18",
+    "fields": {
+      "summary": "Internal sites not resolving",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10018"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10066",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10066",
+    "key": "PROBLEM-19",
+    "fields": {
+      "summary": "SSL certificate expiring soon",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10019"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10067",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10067",
+    "key": "PROBLEM-20",
+    "fields": {
+      "summary": "Unauthorized access attempts in logs",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10020"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10068",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10068",
+    "key": "PROBLEM-21",
+    "fields": {
+      "summary": "New service needs firewall exception",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10021"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10069",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10069",
+    "key": "PROBLEM-22",
+    "fields": {
+      "summary": "Need to set up scanning to email",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10022"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10070",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10070",
+    "key": "PROBLEM-23",
+    "fields": {
+      "summary": "Forgot my password",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10023"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10071",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10071",
+    "key": "PROBLEM-24",
+    "fields": {
+      "summary": "Account creation for new service",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10024"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10072",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10072",
+    "key": "PROBLEM-25",
+    "fields": {
+      "summary": "Calendar invites not being received",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10025"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10073",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10073",
+    "key": "PROBLEM-26",
+    "fields": {
+      "summary": "Need to set up scanning to email",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10026"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10074",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10074",
+    "key": "PROBLEM-27",
+    "fields": {
+      "summary": "Need to resize VM \u2014 running out of resources",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10027"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10075",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10075",
+    "key": "PROBLEM-28",
+    "fields": {
+      "summary": "Not receiving emails sent to distribution list",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10028"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10076",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10076",
+    "key": "PROBLEM-29",
+    "fields": {
+      "summary": "Remove ex-employee from distribution lists",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10029"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10077",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10077",
+    "key": "PROBLEM-30",
+    "fields": {
+      "summary": "Password expired while on vacation",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10030"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10078",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10078",
+    "key": "PROBLEM-31",
+    "fields": {
+      "summary": "Zoom crashes on startup",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10031"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10079",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10079",
+    "key": "PROBLEM-32",
+    "fields": {
+      "summary": "Service account keeps locking out",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10032"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10080",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10080",
+    "key": "PROBLEM-33",
+    "fields": {
+      "summary": "Need admin access to Ping Identity",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10033"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10081",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10081",
+    "key": "PROBLEM-34",
+    "fields": {
+      "summary": "Lost phone \u2014 can't do MFA",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10034"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10082",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10082",
+    "key": "PROBLEM-35",
+    "fields": {
+      "summary": "Cost optimization \u2014 over-provisioned resources",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10035"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10083",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10083",
+    "key": "PROBLEM-36",
+    "fields": {
+      "summary": "Need access to shared drive",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10036"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10084",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10084",
+    "key": "PROBLEM-37",
+    "fields": {
+      "summary": "Account creation for new service",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10037"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10085",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10085",
+    "key": "PROBLEM-38",
+    "fields": {
+      "summary": "Need to create a new Teams channel for project",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10038"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10086",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10086",
+    "key": "PROBLEM-39",
+    "fields": {
+      "summary": "Latency spikes during video calls",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10039"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10087",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10087",
+    "key": "PROBLEM-40",
+    "fields": {
+      "summary": "Second monitor keeps going to sleep",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/3",
+        "description": "This work item is being actively worked on at the moment by the assignee.",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/inprogress.png",
+        "name": "In Progress",
+        "id": "3",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/4",
+          "id": 4,
+          "key": "indeterminate",
+          "colorName": "yellow",
+          "name": "In Progress"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10040"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10088",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10088",
+    "key": "PROBLEM-41",
+    "fields": {
+      "summary": "VPN shows connected but can't reach internal sites",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10041"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10089",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10089",
+    "key": "PROBLEM-42",
+    "fields": {
+      "summary": "Windows update stuck for hours",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10042"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10090",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10090",
+    "key": "PROBLEM-43",
+    "fields": {
+      "summary": "Laptop battery draining very fast",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10043"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10091",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10091",
+    "key": "PROBLEM-44",
+    "fields": {
+      "summary": "Can't install update \u2014 insufficient disk space",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10044"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10092",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10092",
+    "key": "PROBLEM-45",
+    "fields": {
+      "summary": "License key not accepted",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/3",
+        "description": "This work item is being actively worked on at the moment by the assignee.",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/inprogress.png",
+        "name": "In Progress",
+        "id": "3",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/4",
+          "id": 4,
+          "key": "indeterminate",
+          "colorName": "yellow",
+          "name": "In Progress"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10045"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10093",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10093",
+    "key": "PROBLEM-46",
+    "fields": {
+      "summary": "Need to set up scanning to email",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10046"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10094",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10094",
+    "key": "PROBLEM-47",
+    "fields": {
+      "summary": "License key not accepted",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10047"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10095",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10095",
+    "key": "PROBLEM-48",
+    "fields": {
+      "summary": "Forgot my password",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10048"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10096",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10096",
+    "key": "PROBLEM-49",
+    "fields": {
+      "summary": "Printer printing blank pages",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10049"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10097",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10097",
+    "key": "PROBLEM-50",
+    "fields": {
+      "summary": "External monitor not detected",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10050"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10098",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10098",
+    "key": "PROBLEM-51",
+    "fields": {
+      "summary": "USB ports not working on desktop",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10051"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10099",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10099",
+    "key": "PROBLEM-52",
+    "fields": {
+      "summary": "Outlook keeps asking for password",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10052"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10100",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10100",
+    "key": "PROBLEM-53",
+    "fields": {
+      "summary": "New subdomain not resolving",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10053"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10101",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10101",
+    "key": "PROBLEM-54",
+    "fields": {
+      "summary": "Remove ex-employee from distribution lists",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10054"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10102",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10102",
+    "key": "PROBLEM-55",
+    "fields": {
+      "summary": "Desktop randomly restarting",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10055"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10103",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10103",
+    "key": "PROBLEM-56",
+    "fields": {
+      "summary": "Excel crashing when running macros",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10056"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10104",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10104",
+    "key": "PROBLEM-57",
+    "fields": {
+      "summary": "Production service completely down",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10057"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10105",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10105",
+    "key": "PROBLEM-58",
+    "fields": {
+      "summary": "Application blocked by firewall",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10058"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10106",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10106",
+    "key": "PROBLEM-59",
+    "fields": {
+      "summary": "Service account keeps locking out",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10059"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10107",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10107",
+    "key": "PROBLEM-60",
+    "fields": {
+      "summary": "Windows update stuck for hours",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": [
+        "kedb-json-import",
+        "source-TKT-10060"
+      ]
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10140",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10140",
+    "key": "PROBLEM-61",
+    "fields": {
+      "summary": "Customer Portal cannot connect to the production Oracle database.",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10173",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10173",
+    "key": "PROBLEM-62",
+    "fields": {
+      "summary": "Cognos is down",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10041",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Done",
+        "id": "10041",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10174",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10174",
+    "key": "PROBLEM-63",
+    "fields": {
+      "summary": "new error",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10175",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10175",
+    "key": "PROBLEM-64",
+    "fields": {
+      "summary": "Cognos timeout",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10208",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10208",
+    "key": "PROBLEM-65",
+    "fields": {
+      "summary": "abc",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10209",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10209",
+    "key": "PROBLEM-66",
+    "fields": {
+      "summary": "abv",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10242",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10242",
+    "key": "PROBLEM-67",
+    "fields": {
+      "summary": "aaaa",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10243",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10243",
+    "key": "PROBLEM-68",
+    "fields": {
+      "summary": "timeout",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10244",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10244",
+    "key": "PROBLEM-69",
+    "fields": {
+      "summary": "timeout",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10245",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10245",
+    "key": "PROBLEM-70",
+    "fields": {
+      "summary": "Account locked after password change",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10278",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10278",
+    "key": "PROBLEM-71",
+    "fields": {
+      "summary": "user connection timeout ",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10279",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10279",
+    "key": "PROBLEM-72",
+    "fields": {
+      "summary": "user timeout error",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10280",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10280",
+    "key": "PROBLEM-73",
+    "fields": {
+      "summary": "Account locked",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10281",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10281",
+    "key": "PROBLEM-74",
+    "fields": {
+      "summary": "account locked",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10282",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10282",
+    "key": "PROBLEM-75",
+    "fields": {
+      "summary": "account locked",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  },
+  {
+    "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+    "id": "10283",
+    "self": "https://dbcurator.atlassian.net/rest/api/3/issue/10283",
+    "key": "PROBLEM-76",
+    "fields": {
+      "summary": "Account locked ",
+      "status": {
+        "self": "https://dbcurator.atlassian.net/rest/api/3/status/10042",
+        "description": "",
+        "iconUrl": "https://dbcurator.atlassian.net/images/icons/statuses/generic.png",
+        "name": "Backlog",
+        "id": "10042",
+        "statusCategory": {
+          "self": "https://dbcurator.atlassian.net/rest/api/3/statuscategory/2",
+          "id": 2,
+          "key": "new",
+          "colorName": "blue-gray",
+          "name": "To Do"
+        }
+      },
+      "labels": []
+    }
+  }
+]

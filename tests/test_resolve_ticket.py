@@ -139,7 +139,7 @@ def test_search_tab_routes_fields_and_loads_resolution(monkeypatch, identifier, 
     assert calls == expected_calls
     assert response.json()['query'] == {'identifier': identifier, 'description': description}
     assert len(rows) == 1
-    assert rows[0]['final_score'] == pytest.approx(2 / 61 if identifier and description else 1.0 if identifier else 0.87)
+    assert rows[0]['final_score'] == pytest.approx(1.0 if identifier and not description else 0.87)
     assert rows[0]['root_cause'] == 'Cause'
     assert rows[0]['resolution'] == 'Fix'
     assert not {'lexical_score', 'vector_score', 'search_score', 'exact_score'} & rows[0].keys()

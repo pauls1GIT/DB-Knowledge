@@ -39,3 +39,12 @@ def studio_fake_llm() -> FakeLLM:
 def studio_fake_retrieval() -> RetrievalCoordinator:
     # Empty by design so the demo follows the CREATE_NEW branch.
     return RetrievalCoordinator(InMemorySearch([]))
+
+
+class StudioDuplicateScorer:
+    """Empty published corpus for the offline Studio demo only."""
+    from types import SimpleNamespace
+    embedder = SimpleNamespace(model="studio-demo", model_version="v1")
+
+    def score(self, proposal, candidates):
+        return []

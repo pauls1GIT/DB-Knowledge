@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
+import math
 from typing import Any, TypedDict
-from uuid import UUID, uuid4
+from uuid import uuid4
 
-from kedb.observability import execution
+from kedb.application.dto import KnowledgeProposal, RetrievalPlan
+from kedb.observability import execution, traced_step
 
-from kedb.application.dto import EvaluationResult, KnowledgeProposal, RetrievalPlan
+logger = logging.getLogger(__name__)
 
 
 class CuratorState(TypedDict, total=False):
@@ -33,16 +36,15 @@ GRAPH_NODES: list[tuple[str, str, str]] = [
     ("retrieve_jira_fields", "Retrieve Jira Fields", "process"),
     ("extract_structured_error_information", "Extract Structured Error Information", "ai"),
     ("exact_search", "Exact Search", "retrieval"),
-    ("hybrid_search", "Hybrid Search (Databricks RRF)", "retrieval"),
+    ("hybrid_search", "Hybrid Search", "retrieval"),
     ("combine_candidates", "Combine Candidates", "process"),
-    ("rerank_candidates", "RRF: Exact + Hybrid (k=60)", "process"),
-    ("suitable_known_error_found", "Suitable Known Error Found?", "decision"),
-    ("propose_existing_known_error", "Propose Existing Known Error Revision", "ai"),
+    ("score_candidates", "Cosine Similarity", "process"),
+    ("suitable_known_error_found", "Cosine Decision Band?", "decision"),
     ("generate_new_known_error_candidate", "Generate New Known Error Candidate", "ai"),
     ("human_review", "Human Review", "human"),
     ("return_for_ai_revision", "Return for AI Revision", "ai"),
-    ("reject", "Reject (No Publication)", "human"),
-    ("automatic_approve", "Automatically Create (No Matches)", "process"),
+    ("reject", "Reject (No Publication)", "process"),
+    ("automatic_approve", "Automatically Approve Nonduplicate", "process"),
     ("approve", "Approve", "human"),
     ("publish_approved_knowledge", "Publish Approved Knowledge", "publish"),
     ("create_update_article_version", "Create / Update Article Version", "publish"),
@@ -60,19 +62,17 @@ GRAPH_EDGES: list[tuple[str, str, str | None]] = [
     ("extract_structured_error_information", "hybrid_search", None),
     ("exact_search", "combine_candidates", None),
     ("hybrid_search", "combine_candidates", None),
-    ("combine_candidates", "rerank_candidates", None),
-    ("rerank_candidates", "suitable_known_error_found", None),
-    ("suitable_known_error_found", "propose_existing_known_error", "Yes"),
-    ("suitable_known_error_found", "generate_new_known_error_candidate", "No"),
-    ("propose_existing_known_error", "human_review", None),
-    ("generate_new_known_error_candidate", "human_review", "Matches require review"),
+    ("combine_candidates", "generate_new_known_error_candidate", None),
+    ("generate_new_known_error_candidate", "score_candidates", None),
+    ("score_candidates", "suitable_known_error_found", None),
+    ("suitable_known_error_found", "automatic_approve", "Below approval cutoff / no articles"),
+    ("suitable_known_error_found", "human_review", "Between cutoffs"),
     ("human_review", "return_for_ai_revision", "Modify"),
     ("human_review", "reject", "Reject"),
     ("human_review", "approve", "Approve"),
     ("return_for_ai_revision", "human_review", None),
     ("reject", "__end__", None),
-    ("suitable_known_error_found", "reject", "Exact score = 1 / use existing"),
-    ("generate_new_known_error_candidate", "automatic_approve", "No matches"),
+    ("suitable_known_error_found", "reject", "At or above rejection cutoff"),
     ("automatic_approve", "publish_approved_knowledge", None),
     ("approve", "publish_approved_knowledge", None),
     ("publish_approved_knowledge", "create_update_article_version", None),
@@ -127,18 +127,52 @@ def workflow_dot() -> str:
 class CuratorWorkflow:
     """Multi-node curator workflow used by LangGraph and LangGraph Studio.
 
-    LLM reasoning is limited to retrieval planning, candidate evaluation and proposal
-    drafting/revision. Search, merge/ranking, human approval, persistence, chunking,
-    embeddings and index updates stay deterministic.
+    LLM reasoning is limited to retrieval planning and proposal
+    drafting/revision. Duplicate decisions use deterministic cosine thresholds.
+    Publication and indexing retain their existing approval and outbox boundaries.
     """
 
-    def __init__(self, llm, retrieval, publisher=None, chunker=None, embedder=None, indexer=None):
+    def __init__(self, llm, retrieval, publisher=None, chunker=None, embedder=None, indexer=None,
+                 duplicate_scorer=None, duplicate_threshold=0.90, auto_approve_threshold=0.60,
+                 progress=None):
         self.llm = llm
         self.retrieval = retrieval
         self.publisher = publisher
         self.chunker = chunker
         self.embedder = embedder
         self.indexer = indexer
+        self.progress = progress
+        if not math.isfinite(duplicate_threshold) or not -1 <= duplicate_threshold <= 1:
+            raise ValueError("Duplicate threshold must be between -1 and 1")
+        self.duplicate_scorer = duplicate_scorer
+        self.duplicate_threshold = duplicate_threshold
+        if (not math.isfinite(auto_approve_threshold)
+                or not -1 <= auto_approve_threshold < duplicate_threshold):
+            raise ValueError("Auto-approve threshold must be below duplicate rejection threshold")
+        self.auto_approve_threshold = auto_approve_threshold
+
+    def tracked_node(self, name, node):
+        def tracked(state):
+            from langgraph.errors import GraphInterrupt
+
+            def report(event):
+                if self.progress:
+                    try:
+                        self.progress(state.get("workflow_id"), name, event)
+                    except Exception:
+                        logger.warning("Live workflow progress update failed", exc_info=True)
+            report("started")
+            try:
+                result = node(state)
+            except GraphInterrupt:
+                report("completed")
+                raise
+            except Exception:
+                report("failed")
+                raise
+            report("completed")
+            return result
+        return tracked
 
     @staticmethod
     def _candidate_to_dict(candidate: Any) -> dict:
@@ -251,63 +285,60 @@ class CuratorWorkflow:
                     current["hybrid_score"] = float(candidate.get("final_score", 0))
         return {"candidates": list(merged.values())}
 
-    def rerank_candidates(self, state: CuratorState) -> dict:
-        candidates = [dict(c) for c in state.get("candidates", [])]
+    @traced_step("duplication.score_candidates")
+    def score_candidates(self, state: CuratorState) -> dict:
+        if self.duplicate_scorer is None:
+            raise ValueError("An article cosine scorer is required for duplicate decisions")
+        candidates = self.duplicate_scorer.score(state["proposal"], state.get("candidates", []))
         for candidate in candidates:
-            candidate["final_score"] = sum(
-                1.0 / (60 + candidate[key])
-                for key in ("exact_rank", "hybrid_rank") if key in candidate
-            )
-        candidates.sort(key=lambda c: c["final_score"], reverse=True)
-        for rank, candidate in enumerate(candidates, start=1):
-            candidate["rank"] = rank
+            score = candidate.get("cosine_score")
+            if score is None or not math.isfinite(score) or not -1 <= score <= 1:
+                raise ValueError("Missing or invalid cosine score; duplicate decision stopped")
+        candidates.sort(key=lambda c: c["cosine_score"], reverse=True)
+        for rank, candidate in enumerate(candidates, 1):
+            candidate.update(rank=rank, final_score=candidate["cosine_score"])
         return {"candidates": candidates}
 
+    @traced_step("duplication.threshold_decision")
     def suitable_known_error_found(self, state: CuratorState) -> dict:
-        exact_match = any(float(c.get("exact_score", 0)) == 1.0
-                          for c in state.get("exact_candidates", []))
-        no_matches = not state.get("candidates")
-        if exact_match or no_matches:
-            return {
-                "evaluation": {
-                    "recommendation": "USE_EXISTING" if exact_match else "CREATE_NEW",
-                    "confidence": 1.0,
-                    "reasoning": "Exact score is 1" if exact_match else "No search candidates found",
-                },
-                "automatic_create": no_matches and not exact_match,
-            }
-        evaluation = self.llm.structured(
-            system=(
-                "Evaluate whether approved KEDB candidates match the incident. "
-                "Choose USE_EXISTING, UPDATE_EXISTING or CREATE_NEW."
-            ),
-            user=f"issue={state['issue']}\ncandidates={state.get('candidates', [])}",
-            schema=EvaluationResult,
-        )
-        return {"evaluation": evaluation.model_dump(mode="json"), "automatic_create": False}
-
-    def propose_existing_known_error(self, state: CuratorState) -> dict:
-        proposal = self.llm.structured(
-            system="Propose a revision to the selected existing Known Error. Never publish.",
-            user=(
-                f"issue={state['issue']}\nevaluation={state['evaluation']}\n"
-                f"candidates={state.get('candidates', [])}"
-            ),
-            schema=KnowledgeProposal,
-        )
-        data = proposal.model_dump(mode="json")
-        data["action"] = "UPDATE"
-        data["target_known_error_id"] = state["evaluation"].get("selected_known_error_id")
-        if not data["target_known_error_id"] or str(data["target_known_error_id"]) not in {
-            str(c["known_error_id"]) for c in state.get("candidates", [])
-        }:
-            raise ValueError("AI must select an existing search candidate for UPDATE")
-        return {"proposal": data, "status": "WAITING_FOR_REVIEW"}
+        candidates = state.get("candidates", [])
+        best = candidates[0] if candidates else None
+        score = best["cosine_score"] if best else None
+        duplicate = best is not None and score >= self.duplicate_threshold
+        automatic = best is None or score < self.auto_approve_threshold
+        decision = "REJECT" if duplicate else "APPROVE" if automatic else "HUMAN_REVIEW"
+        if best is None:
+            reason = "No current published articles; approved as nonduplicate"
+        elif duplicate:
+            reason = f"Cosine {score:.6f} >= rejection cutoff {self.duplicate_threshold:.6f}: duplicate rejected"
+        elif automatic:
+            reason = f"Cosine {score:.6f} < approval cutoff {self.auto_approve_threshold:.6f}: automatically approved"
+        else:
+            reason = (f"Cosine {score:.6f} is between approval cutoff {self.auto_approve_threshold:.6f} "
+                      f"(inclusive) and rejection cutoff {self.duplicate_threshold:.6f}: human review required")
+        evaluation = {
+            "recommendation": "USE_EXISTING" if duplicate else "CREATE_NEW",
+            "decision": decision,
+            "auto_approve_threshold": self.auto_approve_threshold,
+            "cosine_score": score,
+            "duplicate_threshold": self.duplicate_threshold,
+            "selected_known_error_id": best["known_error_id"] if best else None,
+            "selected_article_version_id": best["article_version_id"] if best else None,
+            "compared_articles": len(candidates),
+            "embedding_model": self.duplicate_scorer.embedder.model,
+            "embedding_model_version": self.duplicate_scorer.embedder.model_version,
+            "reasoning": reason,
+        }
+        logger.info("Duplicate decision workflow=%s score=%s approve_below=%s reject_at=%s match=%s decision=%s",
+                    state.get("workflow_id"), score, self.auto_approve_threshold, self.duplicate_threshold,
+                    evaluation["selected_article_version_id"], decision)
+        return {"evaluation": evaluation, "automatic_create": automatic,
+                "status": "WAITING_FOR_REVIEW" if decision == "HUMAN_REVIEW" else "PROCESSING"}
 
     def generate_new_known_error_candidate(self, state: CuratorState) -> dict:
         proposal = self.llm.structured(
             system="Generate a new Known Error proposal from the incident. Never publish.",
-            user=f"issue={state['issue']}\nevaluation={state['evaluation']}",
+            user=f"issue={state['issue']}",
             schema=KnowledgeProposal,
         )
         data = proposal.model_dump(mode="json")
@@ -336,7 +367,7 @@ class CuratorWorkflow:
     def automatic_approve(self, state: CuratorState) -> dict:
         if not state.get("automatic_create") or state["proposal"]["action"] != "CREATE":
             raise ValueError("Automatic publication requires a low-score CREATE")
-        return {"review": {"decision": "APPROVE", "reviewer": "automatic-low-score-policy"},
+        return {"review": {"decision": "APPROVE", "reviewer": "automatic-cosine-duplicate-policy"},
                 "status": "APPROVED_FOR_PUBLICATION"}
 
     def return_for_ai_revision(self, state: CuratorState) -> dict:
@@ -419,7 +450,9 @@ def route_known_error(state: CuratorState) -> str:
     recommendation = state["evaluation"].get("recommendation")
     if recommendation == "USE_EXISTING":
         return "reject"
-    return "existing" if recommendation == "UPDATE_EXISTING" else "new"
+    if recommendation == "CREATE_NEW":
+        return "automatic" if state.get("automatic_create") else "review"
+    raise ValueError(f"Unexpected duplicate decision: {recommendation}")
 
 
 def route_review(state: CuratorState) -> str:
@@ -451,7 +484,7 @@ def build_langgraph(workflow: CuratorWorkflow, *, checkpointer=None, phase: str 
         node = getattr(workflow, node_name)
         if node_name == "human_review" and phase != "interactive":
             node = lambda _state: {}
-        graph.add_node(node_name, node)
+        graph.add_node(node_name, workflow.tracked_node(node_name, node))
 
     if phase == "review":
         graph.add_conditional_edges(START, route_review, {
@@ -468,19 +501,14 @@ def build_langgraph(workflow: CuratorWorkflow, *, checkpointer=None, phase: str 
 
     # Barrier: combine only after both retrieval branches have completed.
     graph.add_edge(["exact_search", "hybrid_search"], "combine_candidates")
-    graph.add_edge("combine_candidates", "rerank_candidates")
-    graph.add_edge("rerank_candidates", "suitable_known_error_found")
+    graph.add_edge("combine_candidates", "generate_new_known_error_candidate")
+    graph.add_edge("generate_new_known_error_candidate", "score_candidates")
+    graph.add_edge("score_candidates", "suitable_known_error_found")
 
     graph.add_conditional_edges(
         "suitable_known_error_found",
         route_known_error,
-        {"existing": "propose_existing_known_error", "new": "generate_new_known_error_candidate", "reject": "reject"},
-    )
-    graph.add_edge("propose_existing_known_error", "human_review")
-    graph.add_conditional_edges(
-        "generate_new_known_error_candidate",
-        lambda state: "automatic" if state.get("automatic_create") else "review",
-        {"automatic": "automatic_approve", "review": "human_review"},
+        {"automatic": "automatic_approve", "reject": "reject", "review": "human_review"},
     )
     graph.add_edge("automatic_approve", "publish_approved_knowledge")
     graph.add_edge("reject", END)

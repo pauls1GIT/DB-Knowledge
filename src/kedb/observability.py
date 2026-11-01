@@ -32,7 +32,7 @@ def initialize(settings: Settings | None = None):
                 deployment_environment=settings.kedb_env,
                 endpoint=settings.ai_observability_endpoint,
                 api_key=settings.ai_observability_api_key.get_secret_value(),
-                capture_prompts=False,
+                capture_prompts=True,
             )
             _sdk = ai_observability
         except Exception:

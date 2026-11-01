@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import time
 from threading import Event, Lock, Thread
 from uuid import UUID
 
@@ -35,6 +36,8 @@ class MaterializePublications:
         self.lock = Lock()
         self.last_error = None
         self.last_count = 0
+        self.sync_retry_after = 0.0
+        self.progress = {}
 
     def requeue_current(self, article_version_id=None):
         """Repair delivery without creating a new article version."""
@@ -64,6 +67,10 @@ class MaterializePublications:
             return 0
         event_ids = []
         try:
+            # Publication wake-ups must not repeatedly write/sync while the
+            # previous pipeline is still running.
+            if time.monotonic() < self.sync_retry_after:
+                return 0
             with self.database.sessions() as session:
                 events = session.scalars(select(PublicationOutboxRow).where(
                     PublicationOutboxRow.processed.is_(False)).order_by(
@@ -89,8 +96,17 @@ class MaterializePublications:
                     articles[latest.id] = latest
             rows = [row for article in articles.values() for row in chunk_rows(
                 article, is_current=current[article.known_error_id] == article.id)]
+            self.progress = {str(article.id): "Writing article chunks" for article in articles.values()}
             self.sink.write(rows)
-            self.sink.sync()
+            self.progress = {key: "Requesting search index sync" for key in self.progress}
+            if self.sink.sync() is False:
+                self.progress = {key: "Waiting to request index sync" for key in self.progress}
+                self.sync_retry_after = time.monotonic() + 30
+                self.last_count = 0
+                self.last_error = None
+                logger.info("Search index pipeline not ready for another sync; keeping publications pending and retrying later")
+                return 0
+            self.sync_retry_after = 0.0
             # A failed write or sync leaves every event pending for an idempotent retry.
             with self.database.sessions.begin() as session:
                 for event_id in event_ids:
@@ -99,8 +115,10 @@ class MaterializePublications:
                     event.attempts += 1
             self.last_count = len(event_ids)
             self.last_error = None
+            self.progress = {}
             return len(event_ids)
         except Exception as exc:
+            self.progress = {key: "Index delivery failed; retry pending" for key in self.progress}
             self.last_error = str(exc)
             if event_ids:
                 with self.database.sessions.begin() as session:

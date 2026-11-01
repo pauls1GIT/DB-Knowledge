@@ -152,13 +152,52 @@ An empty body reads the server JSON file. **Resume current batch** resumes the s
 snapshot without fetching Jira again; Play fetches the selected input and reuses a
 batch when its source and normalized items are unchanged.
 
-Play starts a server background worker for resolved/closed tickets with resolution text. It continues past tickets requiring human review and adds them to the live Ready for review queue. The UI refreshes every three seconds and displays the next proposal after a decision. Closing the browser does not stop the worker while the server remains running. Pause takes effect after the current ticket; Play resumes saved progress, including after a server restart. An error pauses processing at that ticket and is shown in the UI; Resume current batch retries it. The current deployment uses one API process and one background worker. CREATE/UPDATE and the update target come from the AI workflow; root cause and the ingest-only control are removed from the UI. Approve publishes, Modify requests an AI revision, and Reject finishes without publication. Reviewing does not pause background processing. Results can be downloaded as CSV. Workflow checkpoints persist in the database so restarting Play reuses completed work.
+Play starts a server background worker for resolved/closed tickets with resolution text. It continues past tickets requiring human review and adds them to the live Ready for review queue. The UI refreshes every three seconds and displays the next proposal after a decision. Closing the browser does not stop the worker while the server remains running. Pause takes effect after the current ticket; Play resumes saved progress, including after a server restart. An error pauses processing at that ticket and is shown in the UI; Resume current batch retries it. The current deployment uses one API process and one background worker. New proposals are checked for duplication automatically; root cause and the ingest-only control are removed from the UI. Approve publishes, Modify requests an AI revision, and Reject finishes without publication. Reviewing does not pause background processing. Results can be downloaded as CSV. Workflow checkpoints persist in the database so restarting Play reuses completed work.
 
 Set `DATABRICKS_MODEL_ENDPOINT` and provide Databricks authentication (`DATABRICKS_HOST` / `DATABRICKS_TOKEN`, or SDK authentication). When no Databricks model endpoint is configured, the app uses the Ollama provider at `http://localhost:11434/v1` with model `llama3.2:3b`; this requires a running Ollama server and that model. Play never substitutes fake AI proposals.
 
-Full-text and vector scores contribute 50% each. A combined score strictly above 0.70 rejects the ticket; a score strictly below 0.35 (including no candidates) automatically drafts and publishes CREATE. Boundary scores require AI evaluation and human review.
+Duplicate decisions use article-level cosine similarity, not retrieval ranks or an LLM evaluator.
+Exact and hybrid searches still run and their candidates are merged. Their backend scores remain retrieval context only. The LLM drafts a CREATE
+article first; the application embeds its problem, root cause and solution in a fixed format
+and compares against **all current published articles** in the application database. This
+also covers articles whose search-index sync is pending. The highest cosine score determines one of three outcomes:
 
-New installations and normal app startup create the `publication_claim` table. For SQL-managed deployments apply `migrations/0002_publication_claim.sql` and `migrations/0003_csv_batch.sql`. It adds unique publication identities without deleting existing data. Existing publications are also checked before writing. Identical content is detected after Unicode, case and whitespace normalization; semantic matches depend on retrieval scores. Existing duplicates are not deleted.
+- Below `KEDB_AUTO_APPROVE_THRESHOLD` (default `0.60`): automatically approve.
+- From the approval cutoff (inclusive) to the rejection cutoff (exclusive): human review.
+- At or above `KEDB_DUPLICATE_THRESHOLD` (default `0.90`): reject the incoming duplicate,
+  keeping the ticket and audit history. No published article is deleted.
+
+An empty published corpus automatically approves. Both cutoffs must be in [-1, 1], and the
+approval cutoff must be strictly below the rejection cutoff. Scores are in [-1, 1], not probabilities. Calibrate
+the threshold with reviewed duplicates. Approval here checks duplication only.
+
+Configure `DATABRICKS_EMBEDDING_ENDPOINT` (default `databricks-qwen3-embedding-0-6b`)
+and grant the app service principal permission to query that serving endpoint. Embedding
+requests use SDK authentication. No embedding failure falls back to automatic approval.
+The LLM is still used for retrieval planning and article drafting/revision, but not duplicate
+evaluation. Embedding/scoring/decision steps are traced; scores, matching IDs, model version
+and threshold are saved in workflow checkpoints. **Incident Review -> Batch results** shows
+scores and lets you inspect a completed decision, including rejected duplicates.
+
+Article embeddings are cached by model, model version and normalized article content in the
+`article_embedding` table in Lakebase (SQLite locally). This reuses the existing operational
+store and does not require a Delta writeback table or changes to the managed chunk index.
+Existing articles are embedded lazily on first comparison. Missing texts are deduplicated
+and sent in batches (`KEDB_EMBEDDING_BATCH_SIZE`, default `16`, configurable from 1 to 64).
+The embedding SDK client is reused across tickets. Cache rows are read and inserted in
+bulk (up to 200 keys per SQL operation); normalized vectors are compared in one NumPy
+matrix operation. A warm cache needs only the new draft embedding request, unless its
+text is also cached. Cold-cache runs still need to embed the existing collection.
+The scoring log records article count, cache misses, and elapsed seconds.
+Set `KEDB_EMBEDDING_MODEL_VERSION` to a new value whenever the endpoint's underlying model
+changes; this invalidates the cache. Startup creates the table; SQL-managed deployments
+should apply `migrations/0005_article_embedding.sql` before running the new workflow.
+Comparison currently scans the published corpus, suitable for the current small collection.
+The existing single API process / single batch worker processes tickets sequentially;
+concurrent independent curation requests are not serialized by this duplicate check.
+Previously saved workflow decisions are retained. Middle-band proposals enter the normal human-review queue; Approve publishes, Modify revises, and Reject keeps the audit record without publishing.
+
+New installations and normal app startup create the `publication_claim` table. For SQL-managed deployments apply `migrations/0002_publication_claim.sql` and `migrations/0003_csv_batch.sql`. It adds unique publication identities without deleting existing data. Existing publications are also checked before writing. Identical content is detected after Unicode, case and whitespace normalization; semantic matches depend on cosine similarity. Existing duplicates are not deleted.
 
 ## Workflow Graph tab
 
@@ -167,13 +206,13 @@ The Streamlit app now includes a **Workflow Graph** tab. The diagram is generate
 The graph exposes:
 
 - Jira field retrieval and structured extraction;
-- parallel full-text and vector retrieval;
-- candidate merge/reranking;
-- evaluator branch for existing vs. new Known Error;
+- parallel exact and hybrid retrieval;
+- candidate merge and article cosine scoring;
+- deterministic duplicate threshold decision;
 - LangGraph human-review interrupt;
 - MODIFY -> AI revision -> human review loop;
 - REJECT -> end without publishing;
-- high-score automatic rejection and low-score automatic creation;
+- cosine-threshold automatic rejection or approval;
 - publication, versioning, chunking, embeddings and retrieval-index update.
 
 For local LangGraph Studio:
@@ -233,3 +272,19 @@ The **Manage Tickets** tab inserts and deletes curator ticket records. It does n
 The public reverse proxy now forwards `/api/jira/webhook` to the internal API and
 supports Streamlit HTTP/WebSockets on other UI paths. Deployment and Jira OAuth
 requirements are documented in `REDEPLOY.md` under Jira webhook gateway.
+
+
+## Live ticket progress
+
+Incident Review includes a **Ticket progress** table for every ticket in the selected batch,
+including queued tickets and the ticket currently processing. It refreshes every five seconds
+and shows parallel graph steps together, failed steps, human-review waits, and publication
+status. Published tickets distinguish writing chunks, waiting to request index sync, and
+sync requested; the last status does not assert that embeddings/indexing are ready.
+
+Live graph progress is kept in the single API process's memory to avoid database writes on
+every node. It resets on server restart, while persisted workflow and outbox statuses remain
+visible. A workflow without a saved result or live activity is shown as awaiting processing
+or retry. If deploying multiple API processes, move the live-progress store to shared storage
+before relying on this view across processes. No ticket contents are copied into the progress
+store; it holds workflow IDs, step names and timestamps.

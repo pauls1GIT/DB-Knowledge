@@ -8,6 +8,14 @@ def uid(): return str(uuid4())
 
 class Base(DeclarativeBase): pass
 
+class ArticleEmbeddingRow(Base):
+    __tablename__ = 'article_embedding'
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    model: Mapped[str] = mapped_column(String(500))
+    model_version: Mapped[str] = mapped_column(String(200))
+    vector: Mapped[list] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
 class JiraIssueRow(Base):
     __tablename__='jira_issue'
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)

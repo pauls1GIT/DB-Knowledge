@@ -1,0 +1,73 @@
+{
+  "old_configuration": {
+    "id": 68,
+    "name": "Agile",
+    "type": "kanban",
+    "self": "https://dbcurator.atlassian.net/rest/agile/1.0/board/68/configuration",
+    "location": {
+      "type": "project",
+      "key": "PROBLEM",
+      "id": "10034",
+      "self": "https://dbcurator.atlassian.net/rest/api/2/project/10034",
+      "name": "PROBLEM_MANAGE"
+    },
+    "filter": {
+      "id": "10067",
+      "self": "https://dbcurator.atlassian.net/rest/api/2/filter/10067"
+    },
+    "subQuery": {
+      "query": "fixVersion in unreleasedVersions() OR fixVersion is EMPTY"
+    },
+    "columnConfig": {
+      "columns": [
+        {
+          "name": "Backlog",
+          "statuses": []
+        },
+        {
+          "name": "To Do",
+          "statuses": [
+            {
+              "id": "10042",
+              "self": "https://dbcurator.atlassian.net/rest/api/2/status/10042"
+            },
+            {
+              "id": "10040",
+              "self": "https://dbcurator.atlassian.net/rest/api/2/status/10040"
+            }
+          ]
+        },
+        {
+          "name": "In Progress",
+          "statuses": [
+            {
+              "id": "3",
+              "self": "https://dbcurator.atlassian.net/rest/api/2/status/3"
+            }
+          ]
+        },
+        {
+          "name": "Done",
+          "statuses": [
+            {
+              "id": "10041",
+              "self": "https://dbcurator.atlassian.net/rest/api/2/status/10041"
+            }
+          ]
+        }
+      ],
+      "constraintType": "issueCount"
+    },
+    "ranking": {
+      "rankCustomFieldId": 10019
+    }
+  },
+  "new_board": {
+    "id": 69,
+    "self": "https://dbcurator.atlassian.net/rest/agile/1.0/board/69",
+    "name": "Agile",
+    "type": "scrum"
+  },
+  "verified_issue_count": 60,
+  "old_board_deleted": true
+}

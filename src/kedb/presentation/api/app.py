@@ -5,6 +5,7 @@ import json
 import httpx
 import hashlib
 from pathlib import Path
+from functools import lru_cache
 from contextlib import asynccontextmanager
 from uuid import UUID, NAMESPACE_URL, uuid5
 
@@ -14,7 +15,8 @@ from typing import Literal
 from sqlalchemy import select, func
 from sqlalchemy.exc import IntegrityError
 
-from kedb.application.workflows.curator import CuratorWorkflow
+from kedb.application.workflows.curator import CuratorWorkflow, GRAPH_NODES
+from kedb.application.workflows.progress import WorkflowProgress
 from kedb.infrastructure.lakebase.models import WorkflowCheckpointRow, CsvBatchRow, PublicationOutboxRow
 from kedb.application.incidents import incidents_from_json, batch_items
 from kedb.infrastructure.jira import fetch_incidents
@@ -34,6 +36,7 @@ db = Database(settings.kedb_database_url)
 startup_error: str | None = None
 materializer = None
 chunk_worker = None
+workflow_progress = WorkflowProgress()
 
 
 @asynccontextmanager
@@ -406,6 +409,17 @@ def make_llm():
     return OllamaModelProvider()
 
 
+@lru_cache(maxsize=1)
+def make_article_embedder():
+    from kedb.infrastructure.search.article_cosine import DatabricksArticleEmbedder
+    return DatabricksArticleEmbedder(settings)
+
+
+def make_duplicate_scorer():
+    from kedb.infrastructure.search.article_cosine import ArticleCosineScorer
+    return ArticleCosineScorer(db, make_article_embedder())
+
+
 def workflow_for(session):
     def publisher(state):
         if session is None:
@@ -425,7 +439,11 @@ def workflow_for(session):
         )
         return {"article_version_id": str(article.id), "known_error_id": str(article.known_error_id),
                 "version_number": article.version_number, "status": article.status.value}
-    return CuratorWorkflow(make_llm(), RetrievalCoordinator(make_search_adapter()), publisher=publisher)
+    return CuratorWorkflow(make_llm(), RetrievalCoordinator(make_search_adapter()), publisher=publisher,
+                           duplicate_scorer=make_duplicate_scorer(),
+                           duplicate_threshold=settings.kedb_duplicate_threshold,
+                           auto_approve_threshold=settings.kedb_auto_approve_threshold,
+                           progress=workflow_progress.update)
 
 
 def save_workflow(row, state):
@@ -466,6 +484,7 @@ def start_workflow(issue_id: UUID):
         if row.state:
             return row.state
         save_workflow(row, state)
+    workflow_progress.clear(workflow_id)
     return state
 
 
@@ -481,6 +500,7 @@ def review_workflow(workflow_id: UUID, body: ReviewIn):
         previous = row.state
     workflow = workflow_for(None)
     try:
+        workflow_progress.clear(str(workflow_id))
         state = workflow.apply_review(previous, body.model_dump(mode="json"))
         with db.sessions.begin() as session:
             row = session.scalars(select(WorkflowCheckpointRow).where(
@@ -493,6 +513,7 @@ def review_workflow(workflow_id: UUID, body: ReviewIn):
             save_workflow(row, state)
     except (ValueError, LookupError) as exc:
         raise HTTPException(400, str(exc)) from exc
+    workflow_progress.clear(str(workflow_id))
     if state.get("publication_result") and chunk_worker:
         chunk_worker.wake()
     return state
@@ -557,25 +578,87 @@ def play_batch(body: BatchInput | None = None):
 
 
 def batch_status(batch_id):
+    from kedb.infrastructure.lakebase.models import JiraIssueRow
+    labels = {name: label for name, label, _ in GRAPH_NODES}
+    status_labels = {
+        "WAITING_FOR_REVIEW": "Waiting for human review",
+        "REJECTED": "Rejected; no publication",
+        "PUBLISHED_PENDING_INDEX": "Published; waiting for chunk delivery",
+        "AVAILABLE_FOR_FUTURE_JIRA": "Workflow complete",
+        "APPROVED_FOR_PUBLICATION": "Approved; waiting for publication",
+    }
+    live = workflow_progress.snapshot()
     with db.sessions() as session:
         batch = session.get(CsvBatchRow, batch_id)
         if batch is None:
             raise HTTPException(404, "Batch not found")
         results = [dict(result) for result in batch.results]
-        ids = {result["workflow_id"] for result in results}
-        statuses = {}
-        # Bound SQL parameter counts for large batches.
-        ids = list(ids)
+        # Include queued and in-flight tickets, not only completed batch results.
+        keys = list({item["external_key"] for item in batch.items})
+        issues = {}
+        for offset in range(0, len(keys), 500):
+            issues.update(dict(session.execute(select(JiraIssueRow.external_key, JiraIssueRow.id).where(
+                JiraIssueRow.external_key.in_(keys[offset:offset + 500]))).all()))
+        workflow_ids = {key: str(uuid5(NAMESPACE_URL, f"kedb:issue:{issue_id}"))
+                        for key, issue_id in issues.items()}
+        result_by_key = {item["external_key"]: item for item in results}
+        workflow_ids.update({key: item["workflow_id"] for key, item in result_by_key.items()})
+        ids = list(set(workflow_ids.values()))
+        checkpoints = {}
         for offset in range(0, len(ids), 500):
-            statuses.update(dict(session.execute(select(
-                WorkflowCheckpointRow.workflow_id, WorkflowCheckpointRow.status).where(
-                WorkflowCheckpointRow.workflow_id.in_(ids[offset:offset + 500]))).all()))
+            rows = session.execute(select(
+                WorkflowCheckpointRow.workflow_id, WorkflowCheckpointRow.status,
+                WorkflowCheckpointRow.current_step,
+                WorkflowCheckpointRow.state["publication_result"]["article_version_id"].as_string(),
+            ).where(WorkflowCheckpointRow.workflow_id.in_(ids[offset:offset + 500]))).all()
+            checkpoints.update({row[0]: row[1:] for row in rows})
+        versions = list({row[2] for row in checkpoints.values() if row[2]})
+        delivery = {}
+        for offset in range(0, len(versions), 500):
+            for version_id, processed in session.execute(select(
+                PublicationOutboxRow.article_version_id, PublicationOutboxRow.processed
+            ).where(PublicationOutboxRow.article_version_id.in_(versions[offset:offset + 500]))):
+                delivery[version_id] = delivery.get(version_id, True) and processed
         for result in results:
-            result["status"] = statuses.get(result["workflow_id"], result["status"])
+            saved = checkpoints.get(result["workflow_id"])
+            if saved:
+                result["status"] = saved[0]
+        tickets = []
+        for position, item in enumerate(batch.items):
+            workflow_id = workflow_ids.get(item["external_key"])
+            saved = checkpoints.get(workflow_id)
+            status = saved[0] if saved else result_by_key.get(item["external_key"], {}).get("status", "QUEUED")
+            step = status_labels.get(status, "Queued")
+            if status in {"NEW", "PROCESSING"}:
+                step = "Awaiting processing or retry"
+            if position >= batch.position and status == "QUEUED" and batch.status == "PAUSED":
+                step = "Queued; batch paused"
+            if saved and saved[2]:
+                if saved[2] in delivery:
+                    step = ("Search sync requested; readiness not yet verified" if delivery[saved[2]]
+                            else "Published; waiting for chunk delivery")
+                step = getattr(materializer, "progress", {}).get(saved[2], step)
+            progress = live.get(workflow_id, {})
+            active = progress.get("failed_steps") or progress.get("active_steps")
+            if active:
+                step = " + ".join(labels.get(name, name) for name in active)
+                status = "ERROR" if progress.get("failed_steps") else "PROCESSING"
+                if status == "ERROR":
+                    step = "Failed: " + step
+            elif progress:
+                step = "Finishing: " + labels.get(progress["last_step"], progress["last_step"])
+                status = "PROCESSING"
+            if position == batch.position and batch.status == "ERROR":
+                status = "ERROR"
+                if not progress:
+                    step = "Processing failed; retry pending"
+            tickets.append({"external_key": item["external_key"], "summary": item["summary"],
+                            "workflow_id": workflow_id, "status": status, "current_step": step,
+                            "updated_at": progress.get("updated_at")})
         waiting = [result for result in results if result["status"] == "WAITING_FOR_REVIEW"]
         return {"batch_id": batch.id, "source": batch.source, "status": batch.status,
                 "processed": batch.position, "total": len(batch.items), "error": batch.error,
-                "waiting": waiting, "results": results}
+                "waiting": waiting, "results": results, "tickets": tickets}
 
 
 @app.get("/api/batches/current")

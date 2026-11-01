@@ -22,6 +22,17 @@ env:
   - name: DATABRICKS_MODEL_ENDPOINT
     value: "databricks-meta-llama-3-3-70b-instruct"
 
+  - name: DATABRICKS_EMBEDDING_ENDPOINT
+    value: "databricks-qwen3-embedding-0-6b"
+  - name: KEDB_AUTO_APPROVE_THRESHOLD
+    value: "0.60"
+  - name: KEDB_EMBEDDING_BATCH_SIZE
+    value: "16"
+  - name: KEDB_DUPLICATE_THRESHOLD
+    value: "0.90"
+  - name: KEDB_EMBEDDING_MODEL_VERSION
+    value: "v1"
+
   # Attach the SQL warehouse as an app resource named sql-warehouse (CAN_USE).
   - name: DATABRICKS_WAREHOUSE_ID
     valueFrom: sql-warehouse

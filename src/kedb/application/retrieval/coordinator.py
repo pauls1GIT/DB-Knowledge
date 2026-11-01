@@ -85,16 +85,17 @@ class RetrievalCoordinator:
         if not identifier_query:
             return description_results
 
-        # Reciprocal rank fusion rewards articles returned by both searches.
-        candidates, scores = {}, {}
-        for rows in (exact_results, description_results):
-            for position, candidate in enumerate(rows, start=1):
-                key = (candidate.known_error_id, candidate.article_version_id)
-                candidates.setdefault(key, candidate)
-                scores[key] = scores.get(key, 0.0) + 1.0 / (60 + position)
-        ranked = sorted(scores, key=scores.get, reverse=True)[:top_k]
-        return [replace(candidates[key], final_score=scores[key], rank=i + 1)
-                for i, key in enumerate(ranked)]
+        # Merge identifiers and description hits without reciprocal rank calculation.
+        candidates = {(c.known_error_id, c.article_version_id): c for c in description_results}
+        for candidate in exact_results:
+            key = (candidate.known_error_id, candidate.article_version_id)
+            if key in candidates:
+                candidates[key] = replace(candidates[key], exact_score=candidate.exact_score)
+            else:
+                candidates[key] = candidate
+        ranked = sorted(candidates.values(),
+                        key=lambda c: (c.exact_score > 0, c.search_score), reverse=True)
+        return [replace(c, rank=i + 1) for i, c in enumerate(ranked[:top_k])]
 
     def search(self, query: str, top_k: int = 5) -> list[RetrievalCandidate]:
         merged = {}

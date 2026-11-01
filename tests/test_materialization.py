@@ -147,3 +147,57 @@ def test_worker_wakes_without_waiting_for_poll_interval():
     finally:
         worker.stop()
     assert not worker.thread.is_alive()
+
+
+
+def test_running_sync_defers_without_acknowledging_publications(tmp_path, monkeypatch):
+    from kedb.application.use_cases import materialize
+    clock = [100.0]
+    monkeypatch.setattr(materialize.time, "monotonic", lambda: clock[0])
+    db = setup(tmp_path)
+    publish(db)
+    sink = Sink()
+    calls = []
+    sink.sync = lambda: calls.append(True) or False
+    materializer = MaterializePublications(db, sink)
+    assert materializer.run_once() == 0
+    assert materializer.last_error is None
+    with db.sessions() as session:
+        event = session.scalar(select(PublicationOutboxRow))
+        assert not event.processed
+        assert event.attempts == 0
+    assert materializer.run_once() == 0
+    assert len(calls) == 1  # A new publication wake does not immediately retry.
+    clock[0] += 30
+    sink.sync = lambda: calls.append(True) or True
+    assert materializer.run_once() == 1
+    with db.sessions() as session:
+        event = session.scalar(select(PublicationOutboxRow))
+        assert event.processed
+    assert len(sink.rows) == 2
+
+
+@pytest.mark.parametrize("message,deferred", [
+    ("Index is not ready to sync yet. Pipeline is in state RUNNING and needs to be in one of "
+     "the following states to sync: COMPLETED, FAILED, CANCELED.", True),
+    ("Index is not ready to sync yet. Pipeline is in state WAITING_FOR_RESOURCES and needs to be in one of "
+     "the following states to sync: COMPLETED, FAILED, CANCELED.", True),
+    ("Index is not ready to sync yet. Pipeline is in state INITIALIZING and needs to be in one of "
+     "the following states to sync: COMPLETED, FAILED, CANCELED.", True),
+    ("Index is not ready to sync yet. Pipeline is in state FAILED and needs to be in one of "
+     "the following states to sync: COMPLETED, FAILED, CANCELED.", False),
+    ("Index is not ready to sync yet. Pipeline is in state WAITING_FOR_RESOURCES", False),
+    ("Invalid index configuration", False),
+])
+def test_sql_sink_only_defers_explicit_nonterminal_pipeline_response(message, deferred):
+    from databricks.sdk.errors import BadRequest
+    from kedb.infrastructure.delta.sql_chunks import SqlChunkSink
+    def sync_index(**kwargs):
+        raise BadRequest(message)
+    workspace = SimpleNamespace(vector_search_indexes=SimpleNamespace(sync_index=sync_index))
+    sink = SqlChunkSink(warehouse_id="wh", table="catalog.schema.chunks", index_name="idx", workspace=workspace)
+    if deferred:
+        assert sink.sync() is False
+    else:
+        with pytest.raises(BadRequest):
+            sink.sync()

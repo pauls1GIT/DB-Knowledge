@@ -11,6 +11,16 @@ from kedb.infrastructure.llm.fake import FakeLLM
 from kedb.infrastructure.search.in_memory import InMemorySearch
 
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def fake_embeddings(monkeypatch):
+    from kedb.infrastructure.search.article_cosine import DatabricksArticleEmbedder
+    # Keep integration tests local while exercising the real cache and scorer.
+    monkeypatch.setattr(DatabricksArticleEmbedder, "embed_batch", lambda self, texts: [[1.0, 0.0] for _ in texts])
+
+
 def test_api_play_persists_publication_and_retries(tmp_path, monkeypatch):
     db = Database(f"sqlite+pysqlite:///{tmp_path / 'test.db'}")
     monkeypatch.setattr(api_module, "db", db)
@@ -105,6 +115,9 @@ def test_batch_play_returns_immediately_and_restores_saved_queue(tmp_path, monke
         result = client.get(f"/api/batches/{batch_id}").json()
         assert result["status"] == "COMPLETE"
         assert len(result["results"]) == 2
+        assert result["results"][1]["status"] == "REJECTED"
+        assert result["results"][1]["cosine_score"] == 1.0
+        assert result["results"][1]["duplicate_threshold"] == .9
         workflow_id = result["results"][0]["workflow_id"]
         assert client.get(f"/api/workflows/{workflow_id}").json()["proposal"]["action"] == "CREATE"
         assert client.post("/api/batches/play").json()["batch_id"] == batch_id
@@ -166,3 +179,55 @@ def test_publication_wakes_chunks_only_after_database_commit(tmp_path, monkeypat
     })
     assert response.status_code == 200, response.text
     assert calls == [True]
+
+
+
+def test_batch_exposes_live_step_before_workflow_finishes(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+    from kedb.infrastructure.lakebase.models import CsvBatchRow, WorkflowCheckpointRow, PublicationOutboxRow
+    from kedb.application.workflows.progress import WorkflowProgress
+    db = Database(f"sqlite+pysqlite:///{tmp_path / 'live.db'}")
+    db.create_all()
+    monkeypatch.setattr(api_module, "db", db)
+    monkeypatch.setattr(api_module, "startup_error", None)
+    monkeypatch.setattr(api_module, "materializer", None)
+    monkeypatch.setattr(api_module, "chunk_worker", None)
+    monkeypatch.setattr(api_module, "workflow_progress", WorkflowProgress())
+    monkeypatch.setattr(api_module, "make_search_adapter", lambda: InMemorySearch([]))
+    drafting, release = Event(), Event()
+    fake = FakeLLM({
+        RetrievalPlan: RetrievalPlan(semantic_query="new failure"),
+        KnowledgeProposal: KnowledgeProposal(action="CREATE", title="t", problem="p", root_cause="r", solution="s"),
+    })
+    class BlockingLLM:
+        def structured(self, **kwargs):
+            if kwargs["schema"] is KnowledgeProposal:
+                drafting.set()
+                assert release.wait(10)
+            return fake.structured(**kwargs)
+    monkeypatch.setattr(api_module, "make_llm", BlockingLLM)
+    item = dict(external_key="LIVE-1", summary="New", description="d", resolution="fix")
+    issue = api_module.create_issue(api_module.JiraIn(**item))
+    with db.sessions.begin() as session:
+        session.add(CsvBatchRow(id="live", source="test", items=[item, {**item, "external_key": "LIVE-2"}],
+                                position=0, results=[], status="RUNNING"))
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(api_module.start_workflow, issue["id"])
+        try:
+            assert drafting.wait(5)
+            status = api_module.batch_status("live")
+            assert status["results"] == []
+            assert status["tickets"][0]["current_step"] == "Generate New Known Error Candidate"
+            assert status["tickets"][0]["status"] == "PROCESSING"
+            assert status["tickets"][1]["status"] == "QUEUED"
+            with db.sessions() as session:
+                assert session.scalar(select(WorkflowCheckpointRow)).state == {}
+        finally:
+            release.set()
+        state = future.result(timeout=10)
+    assert api_module.workflow_progress.snapshot() == {}
+    assert api_module.batch_status("live")["tickets"][0]["current_step"] == "Published; waiting for chunk delivery"
+    with db.sessions.begin() as session:
+        session.scalar(select(PublicationOutboxRow)).processed = True
+    assert api_module.batch_status("live")["tickets"][0]["current_step"] == "Search sync requested; readiness not yet verified"

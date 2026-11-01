@@ -59,6 +59,11 @@ class BatchWorker:
             batch.results = [*batch.results, {
                 "workflow_id": state["workflow_id"], "external_key": item["external_key"],
                 "summary": item["summary"], "status": state["status"],
+                "cosine_score": state.get("evaluation", {}).get("cosine_score"),
+                "auto_approve_threshold": state.get("evaluation", {}).get("auto_approve_threshold"),
+                "decision": state.get("evaluation", {}).get("decision"),
+                "duplicate_threshold": state.get("evaluation", {}).get("duplicate_threshold"),
+                "matching_article_id": state.get("evaluation", {}).get("selected_known_error_id"),
             }]
             batch.position = position + 1
             if batch.position == len(batch.items):
