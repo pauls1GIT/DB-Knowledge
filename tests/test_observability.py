@@ -40,7 +40,7 @@ def test_opt_in_and_secret_configuration(sdk):
     assert observability.initialize(settings) is fake
     observability.initialize(settings)
     fake.init.assert_called_once()
-    assert fake.init.call_args.kwargs["capture_prompts"] is False
+    assert fake.init.call_args.kwargs["capture_prompts"] is True
     assert fake.init.call_args.kwargs["api_key"] == "test-key"
     observability.shutdown()
     fake.flush.assert_called_once_with(timeout_millis=5000)
